@@ -1,24 +1,23 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useState } from 'react';
+import Toolbar from './Toolbar';
+import Main from './Main';
+
+export type LangOptions = { [key: string]: string[] };
+
+export interface LanguagePlugin {
+  url: string,
+  metadata: LangOptions,
+  name: string,
+  connectionState: "connecting" | "connected" | "failed",
+}
 
 function App() {
+  const [plugins, setPlugins] = useState<LanguagePlugin[]>([]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="flex justify-end">
+      <Main plugins={plugins} />
+      <Toolbar plugins={plugins} setPlugins={setPlugins} />
     </div>
   );
 }
