@@ -1,7 +1,5 @@
-from typing import Union
-
-from astraios_py.compile import CellContents, CompiledFn, compile
-from astraios_py.highlight import HighlightedText, highlight
+from astraios_py.compile import CellContents, CompiledFn, compile_cell
+from astraios_py.highlight import HighlightedToken, highlight
 from astraios_py.metadata import metadata
 
 from fastapi import FastAPI
@@ -11,11 +9,11 @@ app = FastAPI()
 
 @app.post("/compile")
 def compile_POST(cell: CellContents) -> CompiledFn:
-    return compile(cell)
+    return compile_cell(cell)
 
 
 @app.get("/highlight")
-def highlight_GET(cell: str) -> HighlightedText:
+def highlight_GET(cell: str) -> list[HighlightedToken]:
     return highlight(cell)
 
 

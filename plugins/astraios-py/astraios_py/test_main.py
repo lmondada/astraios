@@ -10,7 +10,8 @@ def test_compile():
     response = client.post(
         "/compile/",
         json={
-            "contents": "def add(a: int, b: int) -> int:\n    return a + b",
+            "code": "def add(a: int, b: int) -> int:\n    return a + b",
+            "options": {},
             "scope": [
                 {"var": "a", "typ": "int"},
                 {"var": "b", "typ": "int"},
@@ -32,16 +33,16 @@ def test_highlight():
     encoded_fn_text = urlencode({"cell": fn_text})
     response = client.get(f"/highlight/?{encoded_fn_text}")
     assert response.status_code == 200
-    assert response.json() == {
-        "text": fn_text,
-        "colour": 0,
-    }
+    split = fn_text.split(" ")
+    assert response.json() == list(map(
+        lambda w: {"text": w, "colour": 1 if w in ["def", "return"] else 0}, split
+    ))
 
 
 def test_metadata():
     response = client.get(f"/metadata")
     assert response.status_code == 200
-    print(response)
     assert response.json() == {
+        "name": "Python",
         "py_version": ["3.8", "3.9", "3.10"],
     }

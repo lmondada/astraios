@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class HighlightedText(BaseModel):
+class HighlightedToken(BaseModel):
     """
     Text with a int-coded colour.
     """
@@ -10,8 +10,12 @@ class HighlightedText(BaseModel):
     colour: int
 
 
-def highlight(text: str) -> HighlightedText:
+def highlight(text: str) -> list[HighlightedToken]:
     """
-    Highlight the given text.
+    Split text into highlighted tokens.
     """
-    return HighlightedText(text=text, colour=0)
+    def highlight_word(word):
+        keywords = {'for', 'if', 'while', 'else', 'return', 'def'}
+        return HighlightedToken(text=word, colour=1 if word in keywords else 0)
+
+    return list(map(highlight_word, text.split(' ')))

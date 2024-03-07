@@ -19,11 +19,12 @@ class CompiledFn(BaseModel):
 
 
 class CellContents(BaseModel):
-    contents: str
+    code: str
+    options: dict[str, str]
     scope: list[VarTypePair]
 
 
-def compile(cell: CellContents) -> CompiledFn:
+def compile_cell(cell: CellContents) -> CompiledFn:
     sig = Signature(
         inputs=[VarTypePair(var="a", typ="int"), VarTypePair(var="b", typ="int")],
         outputs=[VarTypePair(var="c", typ="int")],
