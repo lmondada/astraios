@@ -3,9 +3,19 @@ from astraios_py.highlight import HighlightedToken, highlight
 from astraios_py.metadata import metadata
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/compile")
 def compile_POST(cell: CellContents) -> CompiledFn:
