@@ -2,8 +2,8 @@ from pydantic import BaseModel
 
 
 class VarTypePair(BaseModel):
-    var: str
-    typ: str
+    varName: str
+    varType: str
 
 
 class Signature(BaseModel):
@@ -21,12 +21,12 @@ class CompiledFn(BaseModel):
 class CellContents(BaseModel):
     code: str
     options: dict[str, str]
-    scope: list[VarTypePair]
+    scope: dict[str, str]
 
 
 def compile_cell(cell: CellContents) -> CompiledFn:
     sig = Signature(
-        inputs=[VarTypePair(var="a", typ="int"), VarTypePair(var="b", typ="int")],
-        outputs=[VarTypePair(var="c", typ="int")],
+        inputs=[VarTypePair(varName="a", varType="int"), VarTypePair(varName="b", varType="int")],
+        outputs=[VarTypePair(varName="c", varType="int")],
     )
     return CompiledFn(fn_id="add", signature=sig)

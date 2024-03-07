@@ -12,18 +12,19 @@ def test_compile():
         json={
             "code": "def add(a: int, b: int) -> int:\n    return a + b",
             "options": {},
-            "scope": [
-                {"var": "a", "typ": "int"},
-                {"var": "b", "typ": "int"},
-            ],
+            "scope": {"a": "int", "b": "int"},
         },
     )
+    print(response.json())
     assert response.status_code == 200
     assert response.json() == {
         "fn_id": "add",
         "signature": {
-            "inputs": [{"var": "a", "typ": "int"}, {"var": "b", "typ": "int"}],
-            "outputs": [{"var": "c", "typ": "int"}],
+            "inputs": [
+                {"varName": "a", "varType": "int"},
+                {"varName": "b", "varType": "int"},
+            ],
+            "outputs": [{"varName": "c", "varType": "int"}],
         },
     }
 
@@ -34,9 +35,9 @@ def test_highlight():
     response = client.get(f"/highlight/?{encoded_fn_text}")
     assert response.status_code == 200
     split = fn_text.split(" ")
-    assert response.json() == list(map(
-        lambda w: {"text": w, "colour": 1 if w in ["def", "return"] else 0}, split
-    ))
+    assert response.json() == list(
+        map(lambda w: {"text": w + ' ', "colour": 1 if w in ["def", "return"] else 0}, split)
+    )
 
 
 def test_metadata():
