@@ -1,18 +1,21 @@
 import { useState, SetStateAction, Dispatch, useEffect } from "react";
 import { LanguagePlugin } from "./App";
 
-
 type PluginConnectionProps = {
-  plugin: LanguagePlugin,
-  deletePlugin: () => void,
+  plugin: LanguagePlugin;
+  deletePlugin: () => void;
   setPlugin: (
     name: string,
     metadata: { [key: string]: string[] },
     connectionState: "connecting" | "connected" | "failed"
-  ) => void
+  ) => void;
 };
 
-function PluginConnection({ plugin, deletePlugin, setPlugin }: PluginConnectionProps): JSX.Element {
+function PluginConnection({
+  plugin,
+  deletePlugin,
+  setPlugin,
+}: PluginConnectionProps): JSX.Element {
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
@@ -54,12 +57,15 @@ function PluginConnection({ plugin, deletePlugin, setPlugin }: PluginConnectionP
       <div className="invisible group-hover:visible">
         <button
           className="w-8 h-8 bg-red-100 hover:bg-red-600 rounded-full text-white font-bold"
-          onClick={deletePlugin}>X</button> {/* TODO: Implement remove plugin */}
+          onClick={deletePlugin}
+        >
+          X
+        </button>{" "}
+        {/* TODO: Implement remove plugin */}
       </div>
     </div>
   );
 }
-
 
 type AddPluginConnectionProps = { addPlugin: (url: string) => void };
 
@@ -80,59 +86,80 @@ function AddPluginConnection({ addPlugin }: AddPluginConnectionProps) {
         className="w-3/4 pr-1 border-2"
         value={newPluginUrl}
         onChange={(e) => setNewPluginUrl(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            addPluginUpdateUrl();
+          }
+        }}
         placeholder="Add plugin URL"
       />
-      <button onClick={addPluginUpdateUrl} className="w-1/4 rounded border-2">+</button>
+      <button onClick={addPluginUpdateUrl} className="w-1/4 rounded border-2">
+        +
+      </button>
     </div>
   );
-
 }
 
 type PluginManagerProps = {
-  plugins: LanguagePlugin[],
-  setPlugins: Dispatch<SetStateAction<LanguagePlugin[]>>
+  plugins: LanguagePlugin[];
+  setPlugins: Dispatch<SetStateAction<LanguagePlugin[]>>;
 };
 
 export function PluginManager({ plugins, setPlugins }: PluginManagerProps) {
   function deletePlugin(url: string) {
-    setPlugins(plugins => plugins.filter(plugin => plugin.url !== url));
+    setPlugins((plugins) => plugins.filter((plugin) => plugin.url !== url));
   }
 
-  function setPlugin(url: string, name: string, metadata: { [key: string]: string[] }, connectionState: "connecting" | "connected" | "failed") {
-    setPlugins(plugins => plugins.map(plugin => {
-      if (plugin.url === url) {
-        return { ...plugin, name, metadata, connectionState };
-      } else {
-        return plugin;
-      }
-    }));
+  function setPlugin(
+    url: string,
+    name: string,
+    metadata: { [key: string]: string[] },
+    connectionState: "connecting" | "connected" | "failed"
+  ) {
+    setPlugins((plugins) =>
+      plugins.map((plugin) => {
+        if (plugin.url === url) {
+          return { ...plugin, name, metadata, connectionState };
+        } else {
+          return plugin;
+        }
+      })
+    );
   }
-
 
   function addPlugin(url: string) {
-    if (plugins.some(plugin => plugin.url === url)) {
+    if (plugins.some((plugin) => plugin.url === url)) {
       console.error("Plugin already exists");
       return;
     }
-    setPlugins(plugins => [...plugins, {
-      url,
-      name: "Unknown",
-      metadata: {},
-      connectionState: "connecting"
-    }]);
+    setPlugins((plugins) => [
+      ...plugins,
+      {
+        url,
+        name: "Unknown",
+        metadata: {},
+        connectionState: "connecting",
+      },
+    ]);
   }
 
   return (
     <div className="basis-1/5 p-2">
       <h1 className="font-serif">Plugin Manager</h1>
       <AddPluginConnection addPlugin={addPlugin} />
-      <ul> {plugins.map((plugin) =>
-        <li key={plugin.url}>
-          <PluginConnection
-            plugin={plugin}
-            setPlugin={(name, metadata, connectionState) => setPlugin(plugin.url, name, metadata, connectionState)}
-            deletePlugin={() => deletePlugin(plugin.url)} />
-        </li>)}
+      <ul>
+        {" "}
+        {plugins.map((plugin) => (
+          <li key={plugin.url}>
+            <PluginConnection
+              plugin={plugin}
+              setPlugin={(name, metadata, connectionState) =>
+                setPlugin(plugin.url, name, metadata, connectionState)
+              }
+              deletePlugin={() => deletePlugin(plugin.url)}
+            />
+          </li>
+        ))}
       </ul>
     </div>
   );
