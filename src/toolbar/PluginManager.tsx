@@ -1,5 +1,5 @@
 import { useState, SetStateAction, Dispatch, useEffect } from "react";
-import { LanguagePlugin } from "./App";
+import { LanguagePlugin } from "../App";
 
 type PluginConnectionProps = {
   plugin: LanguagePlugin;

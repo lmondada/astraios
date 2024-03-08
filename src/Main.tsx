@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { LangOptions, LanguagePlugin, Signature } from "./App";
+import { LangOptions, LanguagePlugin, Scope, Signature } from "./App";
 import Editor from "react-simple-code-editor";
 import { v4 as uuid } from "uuid";
 
@@ -172,8 +172,10 @@ function Cell({
       const url = languages[langName]?.url;
       if (url) {
         compileCode(url);
+        moveNextCell();
+      } else {
+        setErrMsg("No language selected");
       }
-      moveNextCell();
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       movePrevCell();
@@ -186,6 +188,8 @@ function Cell({
       const url = languages[langName]?.url;
       if (url) {
         compileCode(url);
+      } else {
+        setErrMsg("No language selected");
       }
     } else if (e.key === "Backspace" && code === "") {
       e.preventDefault();
@@ -228,12 +232,15 @@ function Cell({
   );
 }
 
-type MainProps = { plugins: LanguagePlugin[] };
+type MainProps = {
+  plugins: LanguagePlugin[];
+  scope: Scope;
+  setScope: Dispatch<SetStateAction<Scope>>;
+};
 
 type LanguageSettings = { url: string; metadata: LangOptions };
-type Scope = { varName: string; varType: string; hintValue?: string }[];
 
-export default function Main({ plugins }: MainProps) {
+export default function Main({ plugins, scope, setScope }: MainProps) {
   let availableLangs = plugins
     .filter((plugin) => plugin.connectionState === "connected")
     .reduce((acc, plugin) => {
@@ -248,7 +255,6 @@ export default function Main({ plugins }: MainProps) {
     { id: uuid() },
   ]);
   const cellRefs = useRef<(Editor | null)[]>([null]);
-  const [scope, setScope] = useState<Scope>([]);
   const [activeCell, setActiveCell] = useState<string | null>(cells[0].id);
 
   // Update active cell
