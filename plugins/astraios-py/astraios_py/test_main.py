@@ -10,21 +10,50 @@ def test_compile():
     response = client.post(
         "/compile/",
         json={
-            "code": "def add(a: int, b: int) -> int:\n    return a + b",
+            "code": "c = a + b",
             "options": {},
-            "scope": {"a": "int", "b": "int"},
+            "scope": [
+                {
+                    "varName": "a",
+                    "varType": "int",
+                    "hintValue": "1",
+                },
+                {
+                    "varName": "b",
+                    "varType": "int",
+                    "hintValue": "3",
+                },
+            ],
         },
     )
-    print(response.json())
     assert response.status_code == 200
     assert response.json() == {
         "fn_id": "add",
         "signature": {
             "inputs": [
-                {"varName": "a", "varType": "int"},
-                {"varName": "b", "varType": "int"},
+                {"varName": "a", "varType": "int", "hintValue": "1"},
+                {"varName": "b", "varType": "int", "hintValue": "3"},
             ],
-            "outputs": [{"varName": "c", "varType": "int"}],
+            "outputs": [{"varName": "c", "varType": "int", "hintValue": "4"}],
+        },
+    }
+
+
+def test_compile_2():
+    response = client.post(
+        "/compile/",
+        json={
+            "code": "a = 3",
+            "options": {},
+            "scope": [],
+        },
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "fn_id": "add",
+        "signature": {
+            "inputs": [],
+            "outputs": [{"varName": "a", "varType": "int", "hintValue": "3"}],
         },
     }
 
@@ -36,7 +65,10 @@ def test_highlight():
     assert response.status_code == 200
     split = fn_text.split(" ")
     assert response.json() == list(
-        map(lambda w: {"text": w + ' ', "colour": 1 if w in ["def", "return"] else 0}, split)
+        map(
+            lambda w: {"text": w + " ", "colour": 1 if w in ["def", "return"] else 0},
+            split,
+        )
     )
 
 
