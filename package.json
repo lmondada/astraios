@@ -11,12 +11,14 @@
     "@types/node": "^16.18.86",
     "@types/react": "^18.2.63",
     "@types/react-dom": "^18.2.19",
+    "@types/uuid": "^9.0.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.0.1",
     "react-scripts": "^5.0.1",
-    "react-simple-code-editor": "^0.13.1",
+    "react-simple-code-editor": "github:lmondada/react-simple-code-editor#main",
     "typescript": "^4.9.5",
+    "uuid": "^9.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
