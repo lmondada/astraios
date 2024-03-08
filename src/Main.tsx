@@ -16,7 +16,7 @@ type CellFn = {
 };
 
 type CellProps = {
-  setCellFn: (value: CellFn) => void;
+  setCellFn: (value?: CellFn) => void;
   setCellRef: (value: Editor) => void;
   onFocus: () => void;
   onBlur: () => void;
@@ -26,37 +26,8 @@ type CellProps = {
   cellSignature?: Signature;
   languages: { [key: string]: LanguageSettings };
   scope: Scope;
+  setScope: Dispatch<SetStateAction<Scope>>;
 };
-
-async function compileCode(
-  url: string,
-  code: string,
-  langOpts: { [key: string]: string },
-  scope: Scope,
-  setCellFn: (value: CellFn) => void
-) {
-  try {
-    const response = await fetch(`${url}/compile`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        code: code,
-        options: langOpts,
-        scope: scope,
-      }),
-    });
-    const data = await response.json();
-    if (data.fn_id && data.signature) {
-      setCellFn(data);
-    } else {
-      console.error("Function ID not received");
-    }
-  } catch (error) {
-    console.error("Error compiling code:", error);
-  }
-}
 
 function Cell({
   setCellFn,
@@ -67,6 +38,7 @@ function Cell({
   cellSignature,
   languages,
   scope,
+  setScope,
   onFocus,
   onBlur,
 }: CellProps) {
@@ -79,6 +51,7 @@ function Cell({
   const [code, setCode] = useState("");
   const [highlightedCode, setHighlightedCode] = useState<ReactNode>(<></>);
   const [langOpts, setLangOpts] = useState<{ [key: string]: string }>({});
+  const [errMsg, setErrMsg] = useState("");
   useEffect(() => {
     setLangName(allLangNames[0]);
   }, [allLangNames]);
@@ -115,6 +88,81 @@ function Cell({
     }
   }
 
+  async function compileCode(url: string) {
+    const oldOutputs = cellSignature?.outputs.map((output) => output.varName);
+    const removeOldOutputs = (scope: Scope) =>
+      scope.filter(({ varName }) => !oldOutputs?.includes(varName));
+    const scope_minus_cell = removeOldOutputs(scope);
+    setScope(removeOldOutputs);
+    try {
+      const response = await fetch(`${url}/compile`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code: code,
+          options: langOpts,
+          scope: scope_minus_cell,
+        }),
+      });
+      switch (response.status) {
+        case 200: {
+          let data = await response.json();
+          if (data.fn_id && data.signature) {
+            const { inputs: newInputs, outputs: newOutputs } =
+              data.signature as Signature;
+            // Check all inputs are in scope
+            const missingVars = newInputs.filter(
+              ({ varName, varType }) =>
+                !scope.some((s) => s.varName == varName && s.varType == varType)
+            );
+            if (missingVars.length) {
+              setErrMsg(
+                `You are trying to use ${missingVars
+                  .map(({ varName }) => varName)
+                  .join(", ")}, but they are not defined`
+              );
+              data = undefined;
+            }
+            // Check all outputs are not in scope
+            const overlap = newOutputs.filter(({ varName }) =>
+              scope_minus_cell.some((s) => s.varName == varName)
+            );
+            if (overlap.length) {
+              setErrMsg(
+                `Cannot redefine: ${overlap
+                  .map(({ varName }) => varName)
+                  .join(", ")}`
+              );
+              data = undefined;
+            }
+            setCellFn(data);
+            if (data) {
+              setErrMsg("");
+              setScope((scope) => [...scope, ...newOutputs]);
+            }
+          } else {
+            setErrMsg("Received invalid response from plugin");
+          }
+          break;
+        }
+        case 400: {
+          const data = await response.json();
+          setErrMsg(data.detail);
+          setCellFn(undefined);
+          break;
+        }
+        default:
+          setErrMsg("Received invalid response from plugin");
+          setCellFn(undefined);
+      }
+    } catch (error) {
+      console.error("Error compiling code:", error);
+      setErrMsg("Could not compile");
+    }
+  }
+
   function handleKeyDownCell(
     e: React.KeyboardEvent<HTMLTextAreaElement> &
       React.KeyboardEvent<HTMLDivElement>
@@ -123,7 +171,7 @@ function Cell({
       e.preventDefault();
       const url = languages[langName]?.url;
       if (url) {
-        compileCode(url, code, langOpts, scope, setCellFn);
+        compileCode(url);
       }
       moveNextCell();
     } else if (e.key === "ArrowUp") {
@@ -137,7 +185,7 @@ function Cell({
       e.preventDefault();
       const url = languages[langName]?.url;
       if (url) {
-        compileCode(url, code, langOpts, scope, setCellFn);
+        compileCode(url);
       }
     } else if (e.key === "Backspace" && code === "") {
       e.preventDefault();
@@ -171,6 +219,11 @@ function Cell({
         onBlur={onBlur}
         ref={setCellRef}
       />
+      <div
+        className={errMsg ? "w-full bg-red-300 border-2 rounded" : "invisible"}
+      >
+        {errMsg}
+      </div>
     </div>
   );
 }
@@ -205,23 +258,10 @@ export default function Main({ plugins }: MainProps) {
     activeCellRef?.focus();
   }, [activeCell, cells]);
 
-  const setCellFn = (id: string, newCell: CellFn) => {
+  const setCellFn = (id: string, newCell?: CellFn) => {
     setCells((cells) =>
       cells.map((cell) => (cell.id === id ? { ...cell, fn: newCell } : cell))
     );
-    setScope((scope) => {
-      const outputVars = newCell.signature.outputs.map(
-        (output) => output.varName
-      );
-      const scopeVars = scope.map((scopeItem) => scopeItem.varName);
-      const overlap = outputVars.some((varName) => scopeVars.includes(varName));
-      if (!overlap) {
-        return [...scope, ...newCell.signature.outputs];
-      } else {
-        console.log("Scope overlap detected, not adding new vars to scope");
-        return scope;
-      }
-    });
   };
   const setCellRef = (id: string, ref: Editor | null) => {
     const cellIndex = cells.findIndex((cell) => cell.id === id);
@@ -274,6 +314,7 @@ export default function Main({ plugins }: MainProps) {
               <Cell
                 setCellFn={(cell) => setCellFn(id, cell)}
                 setCellRef={(ref) => setCellRef(id, ref)}
+                setScope={setScope}
                 deleteCell={
                   id !== cells[0].id ? () => deleteCell(id) : () => {}
                 }
@@ -370,8 +411,20 @@ function SignatureRow({ signature }: { signature: Signature }) {
   }
   return (
     <div className="flex text-slate-500 text-sm">
-      <div className="mr-4">inputs: {printVarTypePair(signature.inputs)}</div>
-      <div>outputs: {printVarTypePair(signature.outputs)}</div>
+      <div className="mr-4">
+        {signature.inputs.length ? (
+          <span>inputs: {printVarTypePair(signature.inputs)}</span>
+        ) : (
+          ""
+        )}
+      </div>
+      <div>
+        {signature.outputs.length ? (
+          <span>outputs: {printVarTypePair(signature.outputs)}</span>
+        ) : (
+          ""
+        )}
+      </div>
     </div>
   );
 }

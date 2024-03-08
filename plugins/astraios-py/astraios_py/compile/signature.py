@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from pydantic import BaseModel, Field
+from fastapi import HTTPException
 
 
 class ImmutableInputVar(Exception):
@@ -42,8 +43,20 @@ class ScopeTracker(Mapping):
     """
 
     def __init__(self, scope: list[ScopeSymbol]):
-        self.values = {sym.varName: eval(sym.hintValue) for sym in scope}
-        self.types = {sym.varName: eval(sym.varType) for sym in scope}
+        try:
+            # pylint: disable=eval-used
+            self.types = {sym.varName: eval(sym.varType) for sym in scope}
+        except (NameError, SyntaxError) as exc:
+            raise HTTPException(
+                status_code=400, detail="Scope types not understood"
+            ) from exc
+        try:
+            # pylint: disable=eval-used
+            self.values = {sym.varName: eval(sym.hintValue) for sym in scope}
+        except (NameError, SyntaxError) as exc:
+            raise HTTPException(
+                status_code=400, detail="Value hints are required for inference"
+            ) from exc
         self._inputs = set()
         self._outputs = set()
 
@@ -51,12 +64,20 @@ class ScopeTracker(Mapping):
         if var not in self._outputs:
             # accessing a variable that was not set => input
             self._inputs.add(var)
-        return self.values[var]
+        try:
+            return self.values[var]
+        except KeyError as exc:
+            raise HTTPException(
+                status_code=400, detail=f"Variable {var} not in scope"
+            ) from exc
 
     def __setitem__(self, var, val):
         if var in self._inputs:
             # cannot change a variable that is an input
-            raise ImmutableInputVar("Cannot mutate variable defined elsewhere")
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot mutate input variable",
+            )
         self._outputs.add(var)
         self.types[var] = type(val)
         self.values[var] = val
@@ -103,5 +124,10 @@ def find_signature(code: str, scope: list[ScopeSymbol]) -> Signature:
     seen, in which case this function will not be able to track them.
     """
     tracker = ScopeTracker(scope)
-    exec(code, None, tracker)  # pylint: disable=exec-used
+    try:
+        exec(code, None, tracker)  # pylint: disable=exec-used
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400, detail=f"Python error: {exc}"
+        ) from exc
     return Signature(inputs=tracker.inputs, outputs=tracker.outputs)
