@@ -116,7 +116,8 @@ export default function Toolbar(props: ToolbarProps) {
   const renderedTool = renderTool(instantiateTool(currTool, props));
   return (
     <>
-      <div className="w-16 flex flex-col mt-10">{toolButtons}</div>
+      <div className="w-16"></div>
+      <div className="w-16 flex flex-col mt-10 fixed right-[20%] top-20">{toolButtons}</div>
       {renderedTool !== null ? (
         <div className="basis-1/5">{renderedTool}</div>
       ) : null}

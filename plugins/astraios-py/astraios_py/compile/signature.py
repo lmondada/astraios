@@ -1,5 +1,8 @@
+"""
+Function signature inference
+"""
+
 from collections.abc import Mapping
-from typing import Any
 
 from pydantic import BaseModel, Field
 from fastapi import HTTPException
@@ -127,7 +130,5 @@ def find_signature(code: str, scope: list[ScopeSymbol]) -> Signature:
     try:
         exec(code, None, tracker)  # pylint: disable=exec-used
     except Exception as exc:
-        raise HTTPException(
-            status_code=400, detail=f"Python error: {exc}"
-        ) from exc
+        raise HTTPException(status_code=400, detail=f"Python error: {exc}") from exc
     return Signature(inputs=tracker.inputs, outputs=tracker.outputs)

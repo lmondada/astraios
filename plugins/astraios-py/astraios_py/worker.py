@@ -1,0 +1,113 @@
+"""
+Python code execution using Tierkreis workers
+"""
+
+import re
+
+from fastapi import APIRouter
+from pydantic import AnyUrl
+from tierkreis.worker.namespace import Namespace as WorkerNS
+from tierkreis.pyruntime import PyRuntime
+from tierkreis.builder import Namespace
+
+from .compile import APP_BASE_URL
+
+router = APIRouter()
+
+
+@router.post("/create")
+async def create_worker() -> str:
+    """
+    Create a new worker
+    """
+    worker = Worker.create_worker()
+    return worker.url
+
+
+class Worker:
+    """
+    A worker that can run Python code
+    """
+
+    workers: list["Worker"] = []
+    NAMESPACE: str = "pycells"
+
+    def __init__(self, index: int):
+        self.index = index
+        self.worker = WorkerNS()
+
+    def add_fn(self, code: str):
+        """
+        Add a function to the worker
+        """
+
+        # pylint: disable=unused-variable
+        pycells = self.worker[self.NAMESPACE]
+        # pylint: disable=eval-used
+        exec(code)
+
+    async def run_testing_only(self, fn_name: str, *args):
+        """
+        Execute a function.
+
+        This is for testing: it creates a tierkreis runtime and runs the function.
+        """
+        # pylint: disable=import-outside-toplevel
+        from tierkreis.builder import graph, Output, Const
+
+        cl = PyRuntime([self.worker])
+        ns = Namespace(await cl.get_signature())[self.NAMESPACE]
+
+        @graph()
+        def f_graph() -> Output:
+            f = getattr(ns, fn_name)
+            return Output(f(Const(args)))
+
+        # TODO: something is failing, problem with Tierkreis?
+        return await cl.run_graph(f_graph())
+
+    async def contains(self, fn_name: str) -> bool:
+        """
+        Check if the worker contains a function
+        """
+        cl = PyRuntime([self.worker])
+        ns = Namespace(await cl.get_signature())[self.NAMESPACE]
+        return hasattr(ns, fn_name)
+
+    @property
+    def url(self) -> str:
+        """
+        The URL to access the worker
+        """
+        return f"{APP_BASE_URL}/worker/{self.index}"
+
+    @property
+    def namespace(self) -> str:
+        """
+        The worker's namespace that functions should be register in
+        """
+        return self.NAMESPACE
+
+    @classmethod
+    def create_worker(cls) -> "Worker":
+        """
+        Create a new worker
+        """
+        worker = cls(len(cls.workers))
+        cls.workers.append(worker)
+        return worker
+
+    @classmethod
+    def get_worker(cls, url: AnyUrl) -> "Worker | None":
+        """
+        Get a worker from its URL.
+        """
+        match = re.match(
+            f"^(?:https?://)?{re.escape(APP_BASE_URL)}/worker/(\\d+)$",
+            str(url),
+            re.IGNORECASE,
+        )
+        if not match:
+            return None
+        worker_index = int(match.group(1))
+        return cls.workers[worker_index]

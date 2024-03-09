@@ -1,3 +1,7 @@
+"""
+Very naive Python syntax highlighting
+"""
+
 from pydantic import BaseModel
 
 
