@@ -98,9 +98,8 @@ export default function Toolbar(props: ToolbarProps) {
       const Icon = ToolToIcon[tool];
       const color = currTool === tool ? "bg-blue-400" : "bg-blue-200";
       return (
-        <div className="my-1">
+        <div className="my-1" key={tool}>
           <button
-            key={tool}
             onClick={() => toggleTool(tool)}
             className={`rounded-sm ${color} border-2 border-blue-500 p-1 h-16 w-full hover:bg-blue-400 active:bg-blue-500`}
           >
@@ -116,8 +115,7 @@ export default function Toolbar(props: ToolbarProps) {
   const renderedTool = renderTool(instantiateTool(currTool, props));
   return (
     <>
-      <div className="w-16"></div>
-      <div className="w-16 flex flex-col mt-10 fixed right-[20%] top-20">{toolButtons}</div>
+      <div className="w-16 flex flex-col mt-10 right-[20%] top-20">{toolButtons}</div>
       {renderedTool !== null ? (
         <div className="basis-1/5">{renderedTool}</div>
       ) : null}

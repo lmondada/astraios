@@ -3,14 +3,14 @@ Astraios Language Plugin for Python.
 """
 
 from astraios_py.compile import CellContents, CompiledFn, compile_cell
+from astraios_py.config import ALLOWED_ORIGINS
 from astraios_py.highlight import HighlightedToken, highlight
 from astraios_py.metadata import metadata
+from astraios_py.worker import router as worker_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .worker import router as worker_router
-from .config import ALLOWED_ORIGINS
 
 
 app = FastAPI()

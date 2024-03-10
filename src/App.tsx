@@ -10,6 +10,7 @@ export type Signature = {
 
 export interface LanguagePlugin {
   url: string;
+  workerUrl: string;
   metadata: LangOptions;
   name: string;
   connectionState: "connecting" | "connected" | "failed";

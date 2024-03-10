@@ -88,7 +88,7 @@ function Cell({
     }
   }
 
-  async function compileCode(url: string) {
+  async function compileCode(url: string, workerUrl: string) {
     const oldOutputs = cellSignature?.outputs.map((output) => output.varName);
     const removeOldOutputs = (scope: Scope) =>
       scope.filter(({ varName }) => !oldOutputs?.includes(varName));
@@ -101,7 +101,8 @@ function Cell({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          code: code,
+          code,
+          workerUrl,
           options: langOpts,
           scope: scope_minus_cell,
         }),
@@ -109,7 +110,7 @@ function Cell({
       switch (response.status) {
         case 200: {
           let data = await response.json();
-          if (data.fn_id && data.signature) {
+          if (data.fnId && data.signature) {
             const { inputs: newInputs, outputs: newOutputs } =
               data.signature as Signature;
             // Check all inputs are in scope
@@ -170,8 +171,9 @@ function Cell({
     if (e.key === "Enter" && e.shiftKey) {
       e.preventDefault();
       const url = languages[langName]?.url;
-      if (url) {
-        compileCode(url);
+      const workerUrl = languages[langName]?.workerUrl;
+      if (url && workerUrl) {
+        compileCode(url, workerUrl);
         moveNextCell();
       } else {
         setErrMsg("No language selected");
@@ -186,8 +188,9 @@ function Cell({
       e.preventDefault();
       e.preventDefault();
       const url = languages[langName]?.url;
-      if (url) {
-        compileCode(url);
+      const workerUrl = languages[langName]?.workerUrl;
+      if (url && workerUrl) {
+        compileCode(url, workerUrl);
       } else {
         setErrMsg("No language selected");
       }
@@ -238,7 +241,11 @@ type MainProps = {
   setScope: Dispatch<SetStateAction<Scope>>;
 };
 
-type LanguageSettings = { url: string; metadata: LangOptions };
+type LanguageSettings = {
+  url: string;
+  workerUrl: string;
+  metadata: LangOptions;
+};
 
 export default function Main({ plugins, scope, setScope }: MainProps) {
   let availableLangs = plugins
@@ -246,7 +253,11 @@ export default function Main({ plugins, scope, setScope }: MainProps) {
     .reduce((acc, plugin) => {
       return {
         ...acc,
-        [plugin.name]: { url: plugin.url, metadata: plugin.metadata },
+        [plugin.name]: {
+          url: plugin.url,
+          workerUrl: plugin.workerUrl,
+          metadata: plugin.metadata,
+        },
       };
     }, {} as { [key: string]: LanguageSettings });
 
@@ -399,7 +410,7 @@ function LangOptionsRow({
           </option>
         ))}
       </select>
-      {rowLangOptions.length && <ul>{rowLangOptions}</ul>}
+      {rowLangOptions.length ? <ul>{rowLangOptions}</ul> : null}
     </div>
   );
 }

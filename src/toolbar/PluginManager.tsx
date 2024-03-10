@@ -6,6 +6,7 @@ type PluginConnectionProps = {
   deletePlugin: () => void;
   setPlugin: (
     name: string,
+    workerUrls: string[],
     metadata: { [key: string]: string[] },
     connectionState: "connecting" | "connected" | "failed"
   ) => void;
@@ -22,15 +23,17 @@ function PluginConnection({
         const response = await fetch(`${plugin.url}/metadata`);
         let data = await response.json();
         let name = data.name;
-        if (name !== undefined) {
+        let workerUrls = data.supportedWorkers;
+        if (name !== undefined && workerUrls !== undefined) {
           delete data.name;
-          setPlugin(name, data, "connected");
+          delete data.supportedWorkers;
+          setPlugin(name, workerUrls, data, "connected");
         } else {
-          setPlugin("Unknown", {}, "failed");
+          setPlugin("Unknown", [], {}, "failed");
         }
       } catch (error) {
         console.error("Failed to fetch metadata:", error);
-        setPlugin("Unknown", {}, "failed");
+        setPlugin("Unknown", [], {}, "failed");
       }
     };
 
@@ -106,25 +109,44 @@ type PluginManagerProps = {
 };
 
 export function PluginManager({ plugins, setPlugins }: PluginManagerProps) {
+  const [workerCreators, setWorkerCreators] = useState<{
+    [key: string]: { creators: string[]; name: string };
+  }>({});
+  const [liveWorkers, setLiveWorkers] = useState<{ [key: string]: string }>({});
+
   function deletePlugin(url: string) {
     setPlugins((plugins) => plugins.filter((plugin) => plugin.url !== url));
+    setWorkerCreators((rest) => {
+      delete rest[url];
+      return rest;
+    });
   }
 
   function setPlugin(
     url: string,
     name: string,
+    workerUrls: string[],
     metadata: { [key: string]: string[] },
     connectionState: "connecting" | "connected" | "failed"
   ) {
     setPlugins((plugins) =>
       plugins.map((plugin) => {
         if (plugin.url === url) {
-          return { ...plugin, name, metadata, connectionState };
+          return {
+            ...plugin,
+            name,
+            metadata,
+            connectionState,
+          };
         } else {
           return plugin;
         }
       })
     );
+    setWorkerCreators((rest) => ({
+      ...rest,
+      [url]: { creators: workerUrls, name },
+    }));
   }
 
   function addPlugin(url: string) {
@@ -137,10 +159,26 @@ export function PluginManager({ plugins, setPlugins }: PluginManagerProps) {
       {
         url,
         name: "Unknown",
+        workerUrl: "",
         metadata: {},
         connectionState: "connecting",
       },
     ]);
+  }
+
+  function setWorkerUrl(url: string, workerUrl: string) {
+    setPlugins((plugins) =>
+      plugins.map((plugin) => {
+        if (plugin.url === url) {
+          return {
+            ...plugin,
+            workerUrl,
+          };
+        } else {
+          return plugin;
+        }
+      })
+    );
   }
 
   return (
@@ -153,14 +191,97 @@ export function PluginManager({ plugins, setPlugins }: PluginManagerProps) {
           <li key={plugin.url}>
             <PluginConnection
               plugin={plugin}
-              setPlugin={(name, metadata, connectionState) =>
-                setPlugin(plugin.url, name, metadata, connectionState)
+              setPlugin={(name, workerUrls, metadata, connectionState) =>
+                setPlugin(
+                  plugin.url,
+                  name,
+                  workerUrls,
+                  metadata,
+                  connectionState
+                )
               }
               deletePlugin={() => deletePlugin(plugin.url)}
             />
           </li>
         ))}
       </ul>
+      <WorkerCreator
+        setWorkerUrl={setWorkerUrl}
+        workerCreators={workerCreators}
+      />
     </div>
   );
+}
+
+type WorkerCreatorProps = {
+  setWorkerUrl: (url: string, workerUrl: string) => void;
+  workerCreators: { [key: string]: { creators: string[]; name: string } };
+};
+function WorkerCreator({ setWorkerUrl, workerCreators }: WorkerCreatorProps) {
+  const [selectedLang, setSelectedLang] = useState(
+    Object.keys(workerCreators)[0] ?? ""
+  );
+  const [selectedCreator, setSelectedCreator] = useState(
+    workerCreators[selectedLang]?.creators
+      ? Object.keys(workerCreators[selectedLang].creators)[0]
+      : ""
+  );
+  const [allCreators, setAllCreators] = useState<string[]>([]);
+
+  useEffect(() => {
+    setSelectedLang(Object.keys(workerCreators)[0] ?? "");
+  }, [workerCreators]);
+  useEffect(() => {
+    setSelectedCreator(
+      workerCreators[selectedLang]?.creators
+        ? workerCreators[selectedLang].creators[0]
+        : ""
+    );
+  }, [selectedLang]);
+
+  const createWorker = async () => {
+    const response = await fetch(`${selectedCreator}/create`, {
+      method: "POST",
+    });
+    const workerUrl = await response.json();
+    setWorkerUrl(selectedLang, workerUrl);
+    setAllCreators((allCreators) => [...allCreators, workerUrl]);
+  };
+  return Object.keys(workerCreators).length ? (
+    <>
+      <h1 className="font-serif mt-6">Workers</h1>
+      <div className="border-2 border-black">
+        <select
+          value={Object.keys(workerCreators)[0]}
+          onChange={(e) => setSelectedLang(e.target.value)}
+        >
+          {Object.keys(workerCreators).map((url) => (
+            <option value={url} key={url}>
+              {workerCreators[url].name}
+            </option>
+          ))}
+        </select>
+        {workerCreators[selectedLang] ? (
+          <select
+            value={workerCreators[selectedLang].creators[0]}
+            onChange={(e) => setSelectedCreator(e.target.value)}
+          >
+            {workerCreators[selectedLang].creators.map((creator) => (
+              <option value={creator} key={creator}>
+                {creator}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        <button onClick={createWorker}>Create</button>
+      </div>
+      <div className="border-2 border-black">
+        <ul>
+          {allCreators.map((creator) => (
+            <li key={creator}>{creator}</li>
+          ))}
+        </ul>
+      </div>
+    </>
+  ) : null;
 }
