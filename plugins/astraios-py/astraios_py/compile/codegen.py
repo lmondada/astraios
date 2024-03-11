@@ -8,9 +8,7 @@ from uuid import uuid4
 from .signature import Signature, ScopeSymbol
 
 
-def as_tierkreis_function_str(
-    code: str, sig: Signature, fn_name: str, namespace: str
-) -> str:
+def as_tierkreis_function_str(code: str, sig: Signature, fn_name: str) -> str:
     """
     Convert a code string and a signature into a function string.
 
@@ -25,7 +23,6 @@ def as_tierkreis_function_str(
     code = textwrap.indent(code, "    ")
     return textwrap.dedent(
         f"""\
-        @{namespace}.function()
         def {fn_name}({inputs}) -> ({outputs}):
         {code}
         """

@@ -3,6 +3,7 @@ Python code execution using Tierkreis workers
 """
 
 import re
+import textwrap
 
 from fastapi import APIRouter
 from pydantic import AnyUrl
@@ -43,9 +44,10 @@ class Worker:
 
         # pylint: disable=unused-variable
         pycells = self.worker[self.NAMESPACE]
-        # pylint: disable=eval-used
-        exec(code)
+        # pylint: disable=exec-used
+        exec(f"@{self.NAMESPACE}.function()\nasync {code}")
 
+    # TODO: support arbitrary arguments
     async def run_testing_only(self, fn_name: str, *args):
         """
         Execute a function.
@@ -60,11 +62,12 @@ class Worker:
 
         @graph()
         def f_graph() -> Output:
+            print(fn_name)
             f = getattr(ns, fn_name)
-            return Output(f(Const(args)))
+            print(f)
+            return Output(f(Const(args[0]), Const(args[1])))
 
-        # TODO: something is failing, problem with Tierkreis?
-        return await cl.run_graph(f_graph())
+        return await cl.run_graph(f_graph)
 
     async def contains(self, fn_name: str) -> bool:
         """

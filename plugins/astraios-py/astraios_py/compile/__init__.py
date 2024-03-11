@@ -43,6 +43,6 @@ def compile_cell(cell: CellContents) -> CompiledFn:
     worker = Worker.get_worker(cell.workerUrl)
     if not worker:
         raise HTTPException(status_code=500, detail="Worker not found")
-    code = as_tierkreis_function_str(cell.code, sig, fn_name, worker.namespace)
+    code = as_tierkreis_function_str(cell.code, sig, fn_name)
     worker.add_fn(code)
     return CompiledFn(fnId=fn_name, signature=sig)

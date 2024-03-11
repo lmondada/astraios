@@ -98,5 +98,5 @@ def test_metadata():
     assert response.status_code == 200
     assert response.json() == {
         "name": "Python",
-        "py_version": ["3.8", "3.9", "3.10"],
+        "supportedWorkers": ["http://localhost:8000/worker"],
     }
