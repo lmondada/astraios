@@ -29,3 +29,7 @@ __pycache__
 
 # dev
 .vscode
+
+
+# rust
+**/target
