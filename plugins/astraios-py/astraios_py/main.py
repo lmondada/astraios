@@ -2,19 +2,18 @@
 Astraios Language Plugin for Python.
 """
 
-from astraios_py.compile import CellContents, CompiledFn, compile_cell
 from astraios_py.config import ALLOWED_ORIGINS
 from astraios_py.highlight import HighlightedToken, highlight
-from astraios_py.metadata import metadata
 from astraios_py.worker import router as worker_router
+from astraios_py.compile import router as compile_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 
-
 app = FastAPI()
-app.include_router(worker_router, prefix="/worker")
+app.include_router(worker_router, prefix="/api/worker")
+app.include_router(compile_router, prefix="/api/compile")
 
 
 app.add_middleware(
@@ -26,14 +25,6 @@ app.add_middleware(
 )
 
 
-@app.post("/compile")
-def compile_post(cell: CellContents) -> CompiledFn:
-    """
-    Compile a cell of code and submit to a worker.
-    """
-    return compile_cell(cell)
-
-
 @app.get("/highlight")
 def highlight_get(cell: str) -> list[HighlightedToken]:
     """
@@ -42,9 +33,7 @@ def highlight_get(cell: str) -> list[HighlightedToken]:
     return highlight(cell)
 
 
-@app.get("/metadata")
-def metadata_get():
-    """
-    Get metadata about the language plugin
-    """
-    return metadata()
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="localhost", port=8000, log_level="info", reload=True)

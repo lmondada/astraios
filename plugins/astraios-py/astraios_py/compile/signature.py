@@ -3,6 +3,7 @@ Function signature inference
 """
 
 from collections.abc import Mapping
+from typing import Iterable
 
 from pydantic import BaseModel, Field
 from fastapi import HTTPException
@@ -12,6 +13,15 @@ class ImmutableInputVar(Exception):
     """
     Exception raised when an input variable was mutated.
     """
+
+
+VariableName = str
+VariableType = str
+
+
+class Variable(BaseModel):
+    name: VariableName
+    varType: VariableType
 
 
 class ScopeSymbol(BaseModel):
@@ -55,20 +65,24 @@ class ScopeTracker(Mapping):
             ) from exc
         try:
             # pylint: disable=eval-used
-            self.values = {sym.varName: eval(sym.hintValue) for sym in scope}
+            self._values = {
+                sym.varName: eval(sym.hintValue)
+                for sym in scope
+                if sym.hintValue is not None
+            }
         except (NameError, SyntaxError) as exc:
             raise HTTPException(
                 status_code=400, detail="Value hints are required for inference"
             ) from exc
-        self._inputs = set()
-        self._outputs = set()
+        self._inputs: set[str] = set()
+        self._outputs: set[str] = set()
 
     def __getitem__(self, var):
         if var not in self._outputs:
             # accessing a variable that was not set => input
             self._inputs.add(var)
         try:
-            return self.values[var]
+            return self._values[var]
         except KeyError as exc:
             raise HTTPException(
                 status_code=400, detail=f"Variable {var} not in scope"
@@ -83,17 +97,17 @@ class ScopeTracker(Mapping):
             )
         self._outputs.add(var)
         self.types[var] = type(val)
-        self.values[var] = val
+        self._values[var] = val
 
     def __iter__(self):
-        return iter(self.values)
+        return iter(self._values)
 
     def __len__(self):
-        return len(self.values)
+        return len(self._values)
 
-    def _to_scope_symbol(self, var_names: list[str]):
+    def _to_scope_symbol(self, var_names: Iterable[str]):
         def to_scope_symbol(var_name: str):
-            hint_value = str(self.values[var_name])
+            hint_value = str(self._values[var_name])
             var_type = self.types[var_name].__name__
             return ScopeSymbol(varName=var_name, varType=var_type, hintValue=hint_value)
 

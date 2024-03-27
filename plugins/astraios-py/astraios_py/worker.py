@@ -2,27 +2,34 @@
 Python code execution using Tierkreis workers
 """
 
-import re
-import textwrap
+from typing import Union
+from uuid import uuid4, UUID
 
 from fastapi import APIRouter
-from pydantic import AnyUrl
+from pydantic import BaseModel
 from tierkreis.worker.namespace import Namespace as WorkerNS
 from tierkreis.pyruntime import PyRuntime
 from tierkreis.builder import Namespace
 
-from .compile import APP_BASE_URL
-
 router = APIRouter()
 
 
+class WorkerInfo(BaseModel):
+    """
+    Worker information return by /create request
+    """
+
+    workerId: UUID
+    name: str = "Python"
+
+
 @router.post("/create")
-async def create_worker() -> str:
+async def create_worker() -> WorkerInfo:
     """
     Create a new worker
     """
     worker = Worker.create_worker()
-    return worker.url
+    return WorkerInfo(workerId=worker.worker_id)
 
 
 class Worker:
@@ -30,11 +37,11 @@ class Worker:
     A worker that can run Python code
     """
 
-    workers: list["Worker"] = []
+    workers: dict[UUID, "Worker"] = {}
     NAMESPACE: str = "pycells"
 
-    def __init__(self, index: int):
-        self.index = index
+    def __init__(self, worker_id: UUID):
+        self.worker_id = worker_id
         self.worker = WorkerNS()
 
     def add_fn(self, code: str):
@@ -78,13 +85,6 @@ class Worker:
         return hasattr(ns, fn_name)
 
     @property
-    def url(self) -> str:
-        """
-        The URL to access the worker
-        """
-        return f"{APP_BASE_URL}/worker/{self.index}"
-
-    @property
     def namespace(self) -> str:
         """
         The worker's namespace that functions should be register in
@@ -96,21 +96,14 @@ class Worker:
         """
         Create a new worker
         """
-        worker = cls(len(cls.workers))
-        cls.workers.append(worker)
+        worker_id = uuid4()
+        worker = cls(worker_id)
+        cls.workers[worker_id] = worker
         return worker
 
     @classmethod
-    def get_worker(cls, url: AnyUrl) -> "Worker | None":
+    def get_worker(cls, worker_id: UUID) -> Union["Worker", None]:
         """
-        Get a worker from its URL.
+        Get a worker by its ID
         """
-        match = re.match(
-            f"^(?:https?://)?{re.escape(APP_BASE_URL)}/worker/(\\d+)$",
-            str(url),
-            re.IGNORECASE,
-        )
-        if not match:
-            return None
-        worker_index = int(match.group(1))
-        return cls.workers[worker_index]
+        return cls.workers.get(worker_id)
