@@ -2,13 +2,13 @@
 
 from dataclasses import dataclass
 from queue import Queue
-from typing import Iterable
+from typing import Iterator
 from uuid import uuid4, UUID
 
 from fastapi import HTTPException, APIRouter, BackgroundTasks
 from sse_starlette.sse import EventSourceResponse
 
-from .signature import Signature, ScopeSymbol, Variable
+from .signature import Variable, find_signature
 from .codegen import as_tierkreis_function_str, random_function_name
 from .types import JobID, CompiledFn, JobSubmission, Event, ResultEvent, MessageEvent
 from ..worker import Worker
@@ -73,7 +73,7 @@ class JobManager:
         job.is_done = True
         self.add_status_update(job_id, ResultEvent(data=result))
 
-    def status_events(self, job_id: UUID) -> Iterable[dict[str, str | CompiledFn]]:
+    def status_events(self, job_id: UUID) -> Iterator[dict[str, str | CompiledFn]]:
         """
         A stream of status updates as a generator.
         """
@@ -120,13 +120,9 @@ def compile_cell(cell: JobSubmission) -> CompiledFn:
     TODO: Currently not actually infering signature...
     """
     assert len(cell.cellIds) == 1
-    cellId = cell.cellIds[0]
+    cell_id = cell.cellIds[0]
     code = cell.codes[0]
-    # sig = find_signature(code, cell.scope)
-    sig = Signature(
-        inputs=[ScopeSymbol(varName="a", varType="int")],
-        outputs=[],
-    )
+    sig = find_signature(code, [])
     fn_name = random_function_name()
     print(f"fn_name = {fn_name}")
     worker = Worker.get_worker(cell.workerId)
@@ -134,12 +130,12 @@ def compile_cell(cell: JobSubmission) -> CompiledFn:
         raise HTTPException(status_code=500, detail="Worker not found")
     code = as_tierkreis_function_str(code, sig, fn_name)
     print(f"fcode = {code}")
-    # worker.add_fn(code)
+    worker.add_fn(code)
     print("added function")
     return CompiledFn(
         funcId=fn_name,
-        cellId=cellId,
-        inputs=["a"],
-        outputs=[],
-        variables=[Variable(name="a", varType="int")],
+        cellId=cell_id,
+        inputs=sig.inputs,
+        outputs=sig.outputs,
+        variables=sig.variables,
     )

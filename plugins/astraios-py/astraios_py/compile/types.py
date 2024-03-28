@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from .signature import Signature, VariableName, Variable
+from .signature import VariableName, Variable
 
 
 class JobID(BaseModel):

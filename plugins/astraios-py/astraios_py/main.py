@@ -36,4 +36,10 @@ def highlight_get(cell: str) -> list[HighlightedToken]:
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="localhost", port=8000, log_level="info", reload=True)
+    uvicorn.run(
+        "astraios_py.main:app",
+        host="localhost",
+        port=8000,
+        log_level="info",
+        reload=True,
+    )

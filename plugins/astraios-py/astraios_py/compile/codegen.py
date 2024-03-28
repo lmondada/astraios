@@ -5,7 +5,12 @@ Generate Python code for eval
 import textwrap
 from uuid import uuid4
 
-from .signature import Signature, ScopeSymbol
+from .signature import Signature, format_name_type_pair
+
+FN_TEMPLATE = """\
+def {fn_name}({inputs}) -> tuple[{outputs}]:
+{code}
+"""
 
 
 def as_tierkreis_function_str(code: str, sig: Signature, fn_name: str) -> str:
@@ -15,17 +20,13 @@ def as_tierkreis_function_str(code: str, sig: Signature, fn_name: str) -> str:
     Prefix function definition with @{namespace}.function()
     """
 
-    def to_str(symb: ScopeSymbol):
-        return f"{symb.varName}: {symb.varType}"
-
-    inputs = ",".join(map(to_str, sig.inputs))
-    outputs = ",".join(map(lambda symb: symb.varType, sig.outputs))
+    inputs = ",".join(format_name_type_pair(sig.inputs, sig.variables))
+    outputs = ",".join(
+        format_name_type_pair(sig.outputs, sig.variables, type_only=True)
+    )
     code = textwrap.indent(code, "    ")
-    return textwrap.dedent(
-        f"""\
-        def {fn_name}({inputs}) -> ({outputs}):
-        {code}
-        """
+    return FN_TEMPLATE.format(
+        fn_name=fn_name, inputs=inputs, outputs=outputs, code=code
     )
 
 
