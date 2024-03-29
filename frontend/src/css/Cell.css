@@ -1,0 +1,382 @@
+/*
+ * Cell can have many states:
+ * - interactive (can hover, focus, click), while in edit mode
+ * - stale
+ * - error
+ * - disabled
+ * */
+.Cell {
+  position: relative;
+  margin-bottom: 21px;
+  border-radius: 10px;
+  max-width: inherit;
+  width: 100%;
+  border: 1px solid transparent;
+  box-shadow: var(--light-shadow);
+
+  @apply divide-y divide-[var(--gray-5)];
+
+  &:focus-visible {
+    /* focus-visible outlines the entire cell body in black, but the cell's
+     * body is an irregular shape because of pseudo-elements that extend
+     * its hit-box / hover area. */
+    outline: none;
+  }
+
+  &:focus-within {
+    z-index: 10;
+  }
+
+  /* Hover z-index is higher than focus-within z-index
+   * This is because you may hover for tooltip docs while
+   * not focused in another cell.
+   */
+  &:hover {
+    z-index: 20;
+  }
+
+  /* Interactive */
+  &.interactive {
+    /* Only restrain output length in edit mode. */
+    .output-area,
+    .console-output-area {
+      max-height: 610px;
+      overflow: auto;
+    }
+
+    & > :first-child {
+      border-top-left-radius: 9px;
+      border-top-right-radius: 9px;
+    }
+
+    & > :last-child {
+      border-bottom-left-radius: 9px;
+      border-bottom-right-radius: 9px;
+    }
+
+    &:hover {
+      box-shadow: var(--medium-shadow);
+    }
+
+    &:focus-within {
+      border: 1px solid var(--gray-5);
+
+      /* a sharp box shadow with a slight blur to outline the element */
+      box-shadow: var(--heavy-shadow);
+
+      /* a little bit of motion
+      *
+      * Note: we use left/top instead of transform because transform creates a new
+      * stacking context and makes completion tooltip appear below surrounding
+      * cells/outputs. See
+      *
+      * https://stackoverflow.com/questions/20851452/z-index-is-canceled-by-setting-transformrotate,
+      * https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
+      * */
+      left: -1px;
+      top: -1px;
+    }
+
+    .cm {
+      border-radius: 8px;
+    }
+  }
+
+  /* Stale styles for Cell */
+  &.stale,
+  &.disabled.stale {
+    .output-area,
+    .cm-gutters,
+    .cm {
+      background-color: var(--gray-2);
+      opacity: 0.5;
+    }
+  }
+
+  /* Disabled styles for Cell */
+  &.disabled,
+  &.disabled.has-error,
+  &.disabled:hover,
+  &.disabled.has-error:hover {
+    box-shadow: var(--light-shadow);
+
+    &:focus-within {
+      box-shadow: var(--heavy-shadow);
+    }
+
+    .output-area,
+    .cm-gutters,
+    .cm {
+      background-color: var(--gray-1);
+      opacity: 0.5;
+    }
+  }
+
+  /* Needs Run */
+  &.needs-run {
+    box-shadow: var(--light-shadow-stale);
+
+    @apply divide-[var(--stale-color)];
+
+    &:hover {
+      box-shadow: var(--medium-shadow-stale);
+    }
+
+    &:focus-within:hover,
+    &:focus-within {
+      box-shadow: var(--heavy-shadow-stale);
+    }
+
+    &:focus-within .cm-editor {
+      box-shadow: none;
+      border: 1px solid transparent;
+    }
+
+    .RunButton {
+      visibility: visible;
+    }
+  }
+
+  /* Error styles for Cell */
+  &.has-error,
+  &.error-outline {
+    outline: 1px solid var(--red-4);
+    box-shadow: var(--light-shadow-error);
+  }
+
+  &.has-error:hover {
+    box-shadow: var(--medium-shadow-error);
+  }
+
+  &.has-error:focus-within,
+  &.has-error:focus-within:hover {
+    box-shadow: var(--heavy-shadow-error);
+  }
+
+  &.error-outline,
+  &.error-outline:focus-within {
+    box-shadow: 8px 8px 0 0 hsl(var(--error) / 80%);
+    background-color: var(--red-2);
+  }
+
+  /* Focus state */
+  &.focus-outline {
+    border-color: var(--blue-8) !important;
+
+    /* custom shadow until our theme overrides can support colored shadow */
+    --tw-shadow: 0 4px 0px -1px var(--blue-8), 0 2px 4px -2px var(--blue-8) !important;
+
+    box-shadow: var(--tw-shadow) !important;
+
+    @apply shadow-lg;
+  }
+
+  /* Published - when its just the output */
+  &.published {
+    margin-bottom: 0;
+    border: none;
+    box-shadow: none;
+
+    .output-area {
+      /* flow-root interferes with margin collapsing, but appears to be unneeded
+      * when cell outlines are hidden; clear:both is sufficient.
+      *
+      * if developers just use css-grid instead of float, this won't matter.
+      * */
+      display: block;
+      padding-top: 0;
+      padding-bottom: 0;
+      border: none;
+      box-shadow: none;
+    }
+
+    &:hover {
+      border: none;
+      box-shadow: none;
+    }
+
+    &:focus-within {
+      transform: none;
+    }
+  }
+
+  /* -------------------------- Shoulders/Buttons ---------------------------- */
+  .shoulder-right {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 100%;
+    position: absolute;
+    right: -98px;
+    width: 80px;
+    gap: 4px;
+    z-index: 2;
+  }
+
+  .shoulder-bottom {
+    position: absolute;
+    bottom: -2px;
+    right: 2px;
+    z-index: 2; /* lie above editor */
+  }
+
+  @apply bg-background;
+}
+
+.dark .Cell {
+  @apply border-border;
+}
+
+#App.disconnected {
+  /* Background determined by disconnected gradient/noise. */
+  .Cell,
+  .console-output-area,
+  .cm .cm-gutters,
+  .Cell .cm-editor.cm-focused .cm-activeLineGutter,
+  .Cell .cm-editor.cm-focused .cm-activeLine,
+  .Cell .ShoulderButton {
+    background-color: transparent;
+  }
+
+  /* Hide when disconnected. */
+  .cell-running-icon,
+  .cell-queued-icon,
+  .elapsed-time {
+    visibility: hidden;
+    animation: none;
+  }
+
+  .console-output-area {
+    border-color: transparent;
+  }
+}
+
+.tray {
+  display: flex;
+  position: relative;
+  z-index: 1;
+
+  &:first-child .cm-editor {
+    border-top-left-radius: 9px;
+    border-top-right-radius: 9px;
+  }
+
+  &:last-child .cm-editor {
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
+  }
+
+  /* expand the hover area left and right */
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    width: var(--gutter-width);
+    max-width: var(--gutter-width);
+    height: 100%;
+  }
+
+  &::before {
+    left: calc(var(--gutter-width) * -1);
+  }
+
+  &::after {
+    right: calc(var(--gutter-width) * -1);
+  }
+}
+
+/* Hide tray when dragging a cell, to prevent messing up the measurements. */
+.Cell.is-moving {
+  .tray::before,
+  .tray::after {
+    display: none;
+  }
+}
+
+:root {
+  /* In wide mode, this will overextend, but that's fine */
+  --gutter-width: calc(50vw - (var(--content-width) / 2));
+}
+
+/* ------------------------ CodeMirror Editor ----------------------------- */
+.cm {
+  width: 100%;
+}
+
+.cm-editor {
+  font-size: var(--marimo-code-editor-font-size);
+}
+
+/* .Cell is needed to take precedence over codemirror's generated class ... */
+.Cell .cm-editor {
+  border: 1px solid transparent;
+  padding: 3px;
+
+  /* leave some room for UI elements inside the code editor */
+  padding-right: 24px;
+
+  &.cm-focused {
+    outline: 0;
+
+    .cm-activeLineGutter {
+      background: #e2f2ff;
+    }
+
+    .cm-activeLine {
+      background: hsl(210deg 100% 50% / 3%);
+    }
+  }
+
+  .cm-activeLine {
+    background: transparent;
+
+    /* Soften the corners of the active-line highlight. */
+    border-radius: 2px;
+  }
+
+  .cm-activeLineGutter {
+    background: transparent;
+  }
+
+  .cm-content {
+    font-size: var(--marimo-code-editor-font-size);
+    font-family: var(--monospace-font);
+  }
+}
+
+.dark .Cell .cm-editor.cm-focused .cm-activeLineGutter {
+  background: #0e1e25;
+}
+
+.dark .Cell .cm-editor.cm-focused .cm-activeLine {
+  background: hsl(210deg 100% 2% / 20%);
+}
+
+/* ------------------------------ Output Areas ------------------------------ */
+
+.output-area {
+  max-width: inherit;
+  width: 100%;
+  padding: 0.25rem 1.85rem;
+
+  /* Prevent floated elements from extending out of the output areas and into
+   * the editor. */
+  clear: both;
+  display: flow-root;
+
+  /* TODO: Find a way to accommodate large elements, ideally in a way that
+   * doesn't break margin collapse. Setting overflow (eg, overflow: auto)
+   * breaks margin collapse. */
+}
+
+.marimo-output-stale,
+.Cell.stale .output-area.marimo-output-stale,
+.Cell.stale .console-output-area.marimo-output-stale {
+  opacity: 0.2;
+  transition: opacity 300ms;
+  transition-delay: 200ms;
+}
+
+.console-output-area {
+  background-color: var(--gray-1);
+}
