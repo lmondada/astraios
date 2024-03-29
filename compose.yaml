@@ -1,0 +1,7 @@
+services:
+  envoy:
+    build:
+      context: ./envoy/
+      dockerfile: ./Dockerfile
+    image: astraios/envoy
+
