@@ -1,5 +1,5 @@
 {
-  "name": "@marimo-team/frontend",
+  "name": "@astraios/frontend",
   "version": "0.0.0-placeholder",
   "main": "lib/marimo.js",
   "types": "lib/index.d.ts",
@@ -83,6 +83,7 @@
     "dedent": "^1.5.1",
     "dequal": "^2.0.3",
     "eslint-plugin-header": "^3.1.1",
+    "graphology": "^0.25.4",
     "htm": "^3.1.1",
     "html-react-parser": "^5.1.9",
     "html-to-image": "^1.11.11",

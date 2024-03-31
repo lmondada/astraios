@@ -218,6 +218,9 @@ dependencies:
   eslint-plugin-header:
     specifier: ^3.1.1
     version: 3.1.1(eslint@8.57.0)
+  graphology:
+    specifier: ^0.25.4
+    version: 0.25.4(graphology-types@0.24.7)
   htm:
     specifier: ^3.1.1
     version: 3.1.1
@@ -11212,6 +11215,20 @@ packages:
   /graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
 
+  /graphology-types@0.24.7:
+    resolution: {integrity: sha512-tdcqOOpwArNjEr0gNQKCXwaNCWnQJrog14nJNQPeemcLnXQUUGrsCWpWkVKt46zLjcS6/KGoayeJfHHyPDlvwA==}
+    dev: false
+
+  /graphology@0.25.4(graphology-types@0.24.7):
+    resolution: {integrity: sha512-33g0Ol9nkWdD6ulw687viS8YJQBxqG5LWII6FI6nul0pq6iM2t5EKquOTFDbyTblRB3O9I+7KX4xI8u5ffekAQ==}
+    peerDependencies:
+      graphology-types: '>=0.24.0'
+    dependencies:
+      events: 3.3.0
+      graphology-types: 0.24.7
+      obliterator: 2.0.4
+    dev: false
+
   /grid-index@1.1.0:
     resolution: {integrity: sha512-HZRwumpOGUrHyxO5bqKZL0B0GlUpwtCAzZ42sgxUPniu33R1LSFH5yrIcBCHjkctCAh3mtWKcKd9J4vDDdeVHA==}
     dev: false
@@ -13354,6 +13371,10 @@ packages:
       define-properties: 1.2.1
       es-object-atoms: 1.0.0
     dev: true
+
+  /obliterator@2.0.4:
+    resolution: {integrity: sha512-lgHwxlxV1qIg1Eap7LgIeoBWIMFibOjbrYPIPJZcI1mmGAI2m3lNYpK12Y+GBdPQ0U1hRwSord7GIaawz962qQ==}
+    dev: false
 
   /ohash@1.1.3:
     resolution: {integrity: sha512-zuHHiGTYTA1sYJ/wZN+t5HKZaH23i4yI1HMwbuXm24Nid7Dv0KcuRlKoNKS9UNfAVSBlnGLcuQrnOKWOZoEGaw==}
