@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package astraios.worker;
+
+message CreateWorkerRequest {}
+
+message CreateWorkerResponse {
+  string worker_id = 1;
+  string name = 2;
+}
+
+service WorkerCreation {
+  rpc CreateWorker(CreateWorkerRequest) returns (CreateWorkerResponse);
+}

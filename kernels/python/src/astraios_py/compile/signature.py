@@ -3,11 +3,13 @@ Function signature inference
 """
 
 import re
+from dataclasses import dataclass
 
-from pydantic import BaseModel
 from mypy.build import build, BuildSource, BuildResult, Options
 from mypy.nodes import Var
 from mypy.errorcodes import NAME_DEFINED
+
+from ..protos.compile_pb2 import Variable
 
 
 class ImmutableInputVar(Exception):
@@ -16,26 +18,14 @@ class ImmutableInputVar(Exception):
     """
 
 
-VariableName = str
-VariableType = str
-
-
-class Variable(BaseModel):
-    """
-    A pair of a variable name and its type.
-    """
-
-    name: VariableName
-    varType: VariableType
-
-
-class Signature(BaseModel):
+@dataclass
+class Signature:
     """
     The signature of a function.
     """
 
-    inputs: list[VariableName]
-    outputs: list[VariableName]
+    inputs: list[str]
+    outputs: list[str]
     variables: list[Variable]
 
 
@@ -153,7 +143,7 @@ def find_signature(code: str, scope: list[Variable]) -> Signature:
                     if var_name not in inputs:
                         print(f"Adding new input: {var_name}")
                         inputs.append(var_name)
-                        variables.append(Variable(name=var_name, varType="int"))
+                        variables.append(Variable(name=var_name, type="int"))
                         added_new_inputs = True
                 else:
                     pass  # TODO: handle other error codes
@@ -170,7 +160,7 @@ def find_signature(code: str, scope: list[Variable]) -> Signature:
             continue
         var_type = get_var_type(var.node)
         outputs.append(var_name)
-        variables.append(Variable(name=var_name, varType=var_type))
+        variables.append(Variable(name=var_name, type=var_type))
 
     return Signature(inputs=inputs, outputs=outputs, variables=variables)
 

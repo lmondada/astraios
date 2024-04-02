@@ -1,2 +1,6 @@
 __pycache__
+.venv
+astraios_py/protos
 
+*.egg-info
+/src/astraios_py/protos

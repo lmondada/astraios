@@ -5,31 +5,23 @@ Python code execution using Tierkreis workers
 from typing import Union
 from uuid import uuid4, UUID
 
-from fastapi import APIRouter
-from pydantic import BaseModel
+from astraios_py.protos import worker_pb2_grpc, worker_pb2
+
+import grpc
 from tierkreis.worker.namespace import Namespace as WorkerNS
 from tierkreis.pyruntime import PyRuntime
 from tierkreis.builder import Namespace
 
-router = APIRouter()
 
-
-class WorkerInfo(BaseModel):
-    """
-    Worker information return by /create request
-    """
-
-    workerId: UUID
-    name: str = "Python"
-
-
-@router.post("/create")
-async def create_worker() -> WorkerInfo:
-    """
-    Create a new worker
-    """
-    worker = Worker.create_worker()
-    return WorkerInfo(workerId=worker.worker_id)
+class WorkerCreationServicer(worker_pb2_grpc.WorkerCreationServicer):
+    def CreateWorker(
+        self, request: worker_pb2.CreateWorkerRequest, context: grpc.ServicerContext
+    ) -> worker_pb2.CreateWorkerResponse:
+        """
+        Create a new worker
+        """
+        worker = Worker.create_worker()
+        return worker_pb2.CreateWorkerResponse(worker_id=str(worker.worker_id))
 
 
 class Worker:
