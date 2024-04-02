@@ -1,7 +1,15 @@
 services:
   envoy:
     build:
-      context: ./envoy/
+      context: .
       dockerfile: ./Dockerfile
     image: astraios/envoy
-
+    ports:
+      - "8080:8080"
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+    ports:
+      - "80:80"
+    command: ["/bin/sh", "-c", "nginx -g 'daemon off;'"]
