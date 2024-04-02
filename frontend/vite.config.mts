@@ -42,24 +42,24 @@ const htmlDevPlugin = (): Plugin => {
 
       // copies these elements from server to dev
       const copyElements = [
-        "base",
+        // "base",
         "title",
         "marimo-filename",
         "marimo-version",
         "marimo-mode",
-        "marimo-user-config",
-        "marimo-app-config",
+        // "marimo-user-config",
+        // "marimo-app-config",
         "marimo-server-token",
       ];
 
       // remove from dev
-      copyElements.forEach((id) => {
-        const element = devDoc.querySelector(id);
-        if (!element) {
-          throw new Error(`Element ${id} not found.`);
-        }
-        element.remove();
-      });
+      // copyElements.forEach((id) => {
+      //   const element = devDoc.querySelector(id);
+      //   if (!element) {
+      //     throw new Error(`Element ${id} not found.`);
+      //   }
+      //   element.remove();
+      // });
 
       // copy from server
       copyElements.forEach((id) => {
