@@ -22,7 +22,12 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = ["grpcio-tools~=1.62", "protobuf", "mypy>=1.0"]
+dependencies = [
+  "grpcio-tools>=1.62",
+  # "protobuf",
+  "mypy>=1.0",
+  "tierkreis@git+https://github.com/lmondada/tierkreis.git@0cdea97",
+]
 
 [project.urls]
 Documentation = "https://github.com/lmondada/astraios"
@@ -32,8 +37,11 @@ Source = "https://github.com/lmondada/astraios"
 [tool.hatch.version]
 path = "astraios_py/__about__.py"
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.envs.default]
-pre-install-commands = ["pip install -e tierkreis"]
+# pre-install-commands = ["pip install -e ../../../tmp/tierkreis"]
 dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
@@ -42,7 +50,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.default.scripts]
-serve = "python astraios_py/main.py"
+serve = "python -m astraios_py"
 test = "pytest {args:tests}"
 test-cov = "coverage run -m pytest {args:tests}"
 cov-report = ["- coverage combine", "coverage report"]
