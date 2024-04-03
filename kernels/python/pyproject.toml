@@ -30,10 +30,10 @@ Issues = "https://github.com/lmondada/astraios/issues"
 Source = "https://github.com/lmondada/astraios"
 
 [tool.hatch.version]
-path = "src/astraios_py/__about__.py"
+path = "astraios_py/__about__.py"
 
 [tool.hatch.envs.default]
-pre-install-commands = ["pip install -e ../../../tmp/tierkreis"]
+pre-install-commands = ["pip install -e tierkreis"]
 dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
@@ -42,7 +42,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.default.scripts]
-serve = "python src/astraios_py/main.py"
+serve = "python astraios_py/main.py"
 test = "pytest {args:tests}"
 test-cov = "coverage run -m pytest {args:tests}"
 cov-report = ["- coverage combine", "coverage report"]

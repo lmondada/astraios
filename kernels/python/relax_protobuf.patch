@@ -1,0 +1,13 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index 3cb63be..3226bb2 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -13,7 +13,7 @@ authors = [
+ requires-python = ">=3.10,<3.13"
+ dependencies = [
+     "betterproto[compiler]==2.0.0b6",
+-    "protobuf>=3.19,<4",              # Restrict version to maintain compatibility with opentelemetry
++    "protobuf>=3.19",              # Restrict version to maintain compatibility with opentelemetry
+     "grpclib>=0.4.3rc,<0.5",          # pre-release to support python 3.10
+     "networkx>=2.6.3,<3",
+     "graphviz>=0.20,<0.21",
