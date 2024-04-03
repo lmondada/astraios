@@ -2,6 +2,8 @@ import { atom, useAtomValue, useSetAtom } from "jotai";
 import { Worker, Workers, WorkersState } from "./types";
 import { createReducer } from "@/utils/createReducer";
 import { useEffect, useMemo } from "react";
+import { WorkerCreationClient } from "@/protos/WorkerServiceClientPb";
+import * as worker_pb from "@/protos/worker_pb";
 
 function initialState(): WorkersState {
   return {
@@ -128,38 +130,25 @@ export function useCreateWorkerConnection() {
 
   useEffect(() => {
     // AbortController to cancel the fetch requests at unmount
-    const abortController = new AbortController();
-    const signal = abortController.signal;
+    // const abortController = new AbortController();
+    // const signal = abortController.signal;
+
+    const workerCreationClient = new WorkerCreationClient(
+      "http://localhost:8080",
+    );
+    const request = new worker_pb.CreateWorkerRequest();
 
     const fetchAndUpdateWorkerConnection = async (url: string) => {
-      try {
-        const response = await fetch(`${url}api/worker/create`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({}),
-          signal,
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = (await response.json()) as {
-          name?: string;
-          workerId?: string;
-        };
-        if (data && data.name && data.workerId) {
-          console.log("set worker connected");
-          setWorkerConnected({ url, workerId: data.workerId, name: data.name });
-          setDefaultWorkerIfNull(data.workerId);
-        }
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          // Don't log abort errors
-          console.error("Failed to fetch worker metadata:", error);
+      workerCreationClient.createWorker(request, {}, (err, response) => {
+        if (err) {
+          console.error("Failed to fetch worker metadata:", err);
           setWorkerFailed({ url });
         }
-      }
+        const workerId = response.getWorkerId();
+        const name = response.getName();
+        setWorkerConnected({ url, workerId, name });
+        setDefaultWorkerIfNull(workerId);
+      });
     };
 
     connectingWorkers.forEach((worker) => {
@@ -167,8 +156,8 @@ export function useCreateWorkerConnection() {
     });
 
     // Cleanup function
-    return () => {
-      abortController.abort();
-    };
+    // return () => {
+    //   abortController.abort();
+    // };
   }, [connectingWorkers]);
 }

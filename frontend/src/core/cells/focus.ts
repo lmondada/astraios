@@ -17,6 +17,7 @@ export const lastFocusedCellAtom = atom<{
   status: CellStatus;
   editorView: EditorView | null;
   hasOutput: boolean;
+  workerId: string | null;
 } | null>((get) => {
   const cellId = get(lastFocusedCellIdAtom);
   const { cellData, cellHandles, cellRuntime } = get(notebookAtom);
@@ -37,5 +38,6 @@ export const lastFocusedCellAtom = atom<{
     status: runtime.status,
     editorView: handle.editorView,
     hasOutput: runtime.output !== null,
+    workerId: data.workerId,
   };
 });

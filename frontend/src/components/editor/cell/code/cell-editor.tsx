@@ -87,7 +87,7 @@ const CellEditorInternal = ({
   const setLastFocusedCellId = useSetAtom(lastFocusedCellIdAtom);
   // DOM node where the editorView will be mounted
   const editorViewParentRef = useRef<HTMLDivElement>(null);
-  const defaultWorkerUrl = useDefaultWorkerId();
+  const defaultWorker = useDefaultWorkerId();
 
   const loading = status === "running" || status === "queued";
   const { sendToTop, sendToBottom } = useCellActions();
@@ -103,12 +103,12 @@ const CellEditorInternal = ({
   });
 
   const createBelow = useCallback(
-    () => createNewCell({ cellId, before: false, defaultWorkerUrl }),
-    [cellId, createNewCell, defaultWorkerUrl],
+    () => createNewCell({ cellId, before: false, defaultWorker }),
+    [cellId, createNewCell, defaultWorker],
   );
   const createAbove = useCallback(
-    () => createNewCell({ cellId, before: true, defaultWorkerUrl }),
-    [cellId, createNewCell, defaultWorkerUrl],
+    () => createNewCell({ cellId, before: true, defaultWorker }),
+    [cellId, createNewCell, defaultWorker],
   );
   const moveDown = useCallback(
     () => moveCell({ cellId, before: false }),

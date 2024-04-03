@@ -11,6 +11,7 @@ import { RuntimeMode, getRuntimeMode } from "@/utils/runtimeMode";
 import { SendRunOptions } from "@/core/network/types";
 import { useCompilationHandlers } from "@/core/workers/runtime/compilation";
 import { CompiledCell } from "@/core/workers/runtime/types";
+import { useConnectedWorkers } from "@/core/workers/state";
 
 /**
  * Creates a function that runs all cells that have been edited or interrupted.
@@ -41,6 +42,7 @@ export function useRunCell(cellId: CellId | undefined) {
  */
 function useRunCells() {
   const notebook = useNotebook();
+  const workers = useConnectedWorkers();
 
   const runCells = useEvent(async (cellIds: CellId[]) => {
     if (cellIds.length === 0) {
@@ -50,11 +52,16 @@ function useRunCells() {
     const { cellHandles, cellData } = notebook;
     // TODO: this needs to be updated for each cell!
     let workerUrl: string | null = null;
+    let workerId: string | null = null;
 
     const codes: string[] = [];
     for (const cellId of cellIds) {
-      if (workerUrl === null) {
-        workerUrl = cellData[cellId].workerUrl;
+      const worker = workers.find(
+        (w) => w.workerId === cellData[cellId].workerId,
+      );
+      if (workerUrl === null && worker) {
+        workerUrl = worker.url;
+        workerId = worker.workerId;
       }
       const ref = derefNotNull(cellHandles[cellId]);
       codes.push(getEditorCodeAsPython(ref.editorView));
@@ -65,7 +72,8 @@ function useRunCells() {
     if (getRuntimeMode() == RuntimeMode.Workers) {
       opts = {
         ...useCompilationHandlers(),
-        baseUrl: workerUrl,
+        baseUrl: workerUrl as string,
+        workerId: workerId as string,
       };
     }
 

@@ -42,7 +42,11 @@ describe("cell reducer", () => {
     i = 0;
 
     state = initialNotebookState();
-    actions.createNewCell({ cellId: undefined!, before: false });
+    actions.createNewCell({
+      cellId: undefined!,
+      before: false,
+      defaultWorker: null,
+    });
     firstCellId = state.cellIds[0];
   });
 
@@ -54,6 +58,7 @@ describe("cell reducer", () => {
     actions.createNewCell({
       cellId: firstCellId,
       before: false,
+      defaultWorker: null,
     });
     expect(formatCells(state)).toMatchInlineSnapshot(`
       "
@@ -69,6 +74,7 @@ describe("cell reducer", () => {
     actions.createNewCell({
       cellId: firstCellId,
       before: true,
+      defaultWorker: null,
     });
     expect(formatCells(state)).toMatchInlineSnapshot(`
       "
@@ -84,6 +90,7 @@ describe("cell reducer", () => {
     actions.createNewCell({
       cellId: firstCellId,
       before: false,
+      defaultWorker: null,
     });
     actions.deleteCell({
       cellId: firstCellId,
@@ -123,6 +130,7 @@ describe("cell reducer", () => {
     actions.createNewCell({
       cellId: firstCellId,
       before: false,
+      defaultWorker: null,
     });
     expect(formatCells(state)).toMatchInlineSnapshot(`
       "
@@ -166,10 +174,12 @@ describe("cell reducer", () => {
     actions.createNewCell({
       cellId: firstCellId,
       before: false,
+      defaultWorker: null,
     });
     actions.createNewCell({
       cellId: "1" as CellId,
       before: false,
+      defaultWorker: null,
     });
     expect(formatCells(state)).toMatchInlineSnapshot(`
       "
@@ -505,6 +515,7 @@ describe("cell reducer", () => {
     actions.createNewCell({
       cellId: firstCellId,
       before: false,
+      defaultWorker: null,
     });
     const secondCell = cells[1].id;
     // Update code

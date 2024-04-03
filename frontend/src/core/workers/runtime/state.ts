@@ -2,9 +2,8 @@ import { atom, useAtomValue, useSetAtom } from "jotai";
 import Graph from "graphology";
 import { CompiledCell } from "./types";
 import { Variables } from "@/core/variables/types";
-import { useVariables, useVariablesActions } from "@/core/variables/state";
+import { useVariablesActions } from "@/core/variables/state";
 import { useEffect, useMemo } from "react";
-import { useCellIds } from "@/core/cells/cells";
 import { CellId } from "@/core/cells/ids";
 import { createReducer } from "@/utils/createReducer";
 

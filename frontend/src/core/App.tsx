@@ -14,8 +14,7 @@ import {
 import { Controls } from "@/components/editor/controls/Controls";
 import { DirCompletionInput } from "@/components/editor/DirCompletionInput";
 import { FilenameForm } from "@/components/editor/FilenameForm";
-import { WebSocketState } from "./websocket/types";
-import { useMarimoWebSocket } from "./websocket/useMarimoWebSocket";
+import { ConnectionStatus, WebSocketState } from "./websocket/types";
 import {
   LastSavedNotebook,
   notebookCells,
@@ -55,7 +54,8 @@ import { formatAll } from "./codemirror/format";
 import { cn } from "@/utils/cn";
 import { isStaticNotebook } from "./static/static-state";
 import { useFilename } from "./saving/filename";
-import { getSessionId } from "./kernel/session";
+// import { getSessionId } from "./kernel/session";
+import { createCell } from "./cells/types";
 
 interface AppProps {
   userConfig: UserConfig;
@@ -89,19 +89,23 @@ export const App: React.FC<AppProps> = ({ userConfig, appConfig }) => {
     };
   }, []);
 
-  const { connStatus } = useMarimoWebSocket({
-    autoInstantiate:
-      userConfig.runtime.auto_instantiate || viewState.mode === "read",
-    setCells: (cells, layout) => {
-      setCells(cells);
-      const names = cells.map((cell) => cell.name);
-      const codes = cells.map((cell) => cell.code);
-      const configs = cells.map((cell) => cell.config);
-      setLastSavedNotebook({ names, codes, configs, layout });
-    },
-    sessionId: getSessionId(),
-  });
-
+  // const { connStatus } = useMarimoWebSocket({
+  //   autoInstantiate:
+  //     userConfig.runtime.auto_instantiate || viewState.mode === "read",
+  //   setCells: (cells, layout) => {
+  //     setCells(cells);
+  //     const names = cells.map((cell) => cell.name);
+  //     const codes = cells.map((cell) => cell.code);
+  //     const configs = cells.map((cell) => cell.config);
+  //     setLastSavedNotebook({ names, codes, configs, layout });
+  //   },
+  //   sessionId: getSessionId(),
+  // });
+  const connStatus = { state: WebSocketState.OPEN } as ConnectionStatus;
+  useEffect(() => {
+    setCells([createCell({ id: CellId.create() })]);
+    console.log("created cell");
+  }, []);
   const handleFilenameChange = useEvent(
     (name: string | null): Promise<string | null> => {
       if (connStatus.state !== WebSocketState.OPEN) {
