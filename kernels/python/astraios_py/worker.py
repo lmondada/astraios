@@ -21,7 +21,9 @@ class WorkerCreationServicer(worker_pb2_grpc.WorkerCreationServicer):
         Create a new worker
         """
         worker = Worker.create_worker()
-        return worker_pb2.CreateWorkerResponse(worker_id=str(worker.worker_id))
+        return worker_pb2.CreateWorkerResponse(
+            worker_id=str(worker.worker_id), name="Python"
+        )
 
 
 class Worker:

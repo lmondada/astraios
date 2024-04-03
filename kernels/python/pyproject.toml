@@ -27,6 +27,7 @@ dependencies = [
   # "protobuf",
   "mypy>=1.0",
   "tierkreis@git+https://github.com/lmondada/tierkreis.git@0cdea97",
+  "grpcio-reflection",
 ]
 
 [project.urls]

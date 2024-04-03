@@ -10,6 +10,10 @@ COPY . /app
 # Install Hatch
 RUN pip install hatch
 
+RUN apt-get update && \
+    apt-get install -y git protobuf-compiler && \
+    rm -rf /var/lib/apt/lists/*
+
 # Install dependencies
 RUN hatch env create
 
