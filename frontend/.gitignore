@@ -25,3 +25,5 @@ e2e-tests/exports
 
 # storybook
 /storybook-static
+
+src/protos

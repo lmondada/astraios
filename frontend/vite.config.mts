@@ -11,69 +11,69 @@ const isDev = process.env.NODE_ENV === "development";
 const isStorybook = process.env.npm_lifecycle_script?.includes("storybook");
 const isPyodide = process.env.PYODIDE === "true";
 
-const htmlDevPlugin = (): Plugin => {
-  return {
-    apply: "serve",
-    name: "html-transform",
-    transformIndexHtml: async (html) => {
-      if (isStorybook) {
-        return html;
-      }
+// const htmlDevPlugin = (): Plugin => {
+//   return {
+//     apply: "serve",
+//     name: "html-transform",
+//     transformIndexHtml: async (html) => {
+//       if (isStorybook) {
+//         return html;
+//       }
 
-      if (isPyodide) {
-        html = html.replace("{{ base_url }}", "");
-        html = html.replace("{{ title }}", "marimo");
-        html = html.replace("{{ user_config }}", JSON.stringify({}));
-        html = html.replace("{{ app_config }}", JSON.stringify({}));
-        html = html.replace("{{ server_token }}", "");
-        html = html.replace("{{ version }}", "local");
-        html = html.replace("{{ filename }}", "notebook.py");
-        html = html.replace("{{ mode }}", "edit");
-        html = html.replace(/<\/head>/, `<marimo-wasm></marimo-wasm></head>`);
-        return html;
-      }
+//       if (isPyodide) {
+//         html = html.replace("{{ base_url }}", "");
+//         html = html.replace("{{ title }}", "marimo");
+//         html = html.replace("{{ user_config }}", JSON.stringify({}));
+//         html = html.replace("{{ app_config }}", JSON.stringify({}));
+//         html = html.replace("{{ server_token }}", "");
+//         html = html.replace("{{ version }}", "local");
+//         html = html.replace("{{ filename }}", "notebook.py");
+//         html = html.replace("{{ mode }}", "edit");
+//         html = html.replace(/<\/head>/, `<marimo-wasm></marimo-wasm></head>`);
+//         return html;
+//       }
 
-      // fetch html from server
-      const serverHtmlResponse = await fetch(TARGET);
-      const serverHtml = await serverHtmlResponse.text();
+//       // fetch html from server
+//       const serverHtmlResponse = await fetch(TARGET);
+//       const serverHtml = await serverHtmlResponse.text();
 
-      const serverDoc = new JSDOM(serverHtml).window.document;
-      const devDoc = new JSDOM(html).window.document;
+//       const serverDoc = new JSDOM(serverHtml).window.document;
+//       const devDoc = new JSDOM(html).window.document;
 
-      // copies these elements from server to dev
-      const copyElements = [
-        // "base",
-        "title",
-        "marimo-filename",
-        "marimo-version",
-        "marimo-mode",
-        // "marimo-user-config",
-        // "marimo-app-config",
-        "marimo-server-token",
-      ];
+//       // copies these elements from server to dev
+//       const copyElements = [
+//         // "base",
+//         "title",
+//         "marimo-filename",
+//         "marimo-version",
+//         "marimo-mode",
+//         // "marimo-user-config",
+//         // "marimo-app-config",
+//         "marimo-server-token",
+//       ];
 
-      // remove from dev
-      // copyElements.forEach((id) => {
-      //   const element = devDoc.querySelector(id);
-      //   if (!element) {
-      //     throw new Error(`Element ${id} not found.`);
-      //   }
-      //   element.remove();
-      // });
+//       // remove from dev
+//       // copyElements.forEach((id) => {
+//       //   const element = devDoc.querySelector(id);
+//       //   if (!element) {
+//       //     throw new Error(`Element ${id} not found.`);
+//       //   }
+//       //   element.remove();
+//       // });
 
-      // copy from server
-      copyElements.forEach((id) => {
-        const element = serverDoc.querySelector(id);
-        if (!element) {
-          throw new Error(`Element ${id} not found.`);
-        }
-        devDoc.head.append(element);
-      });
+//       // copy from server
+//       copyElements.forEach((id) => {
+//         const element = serverDoc.querySelector(id);
+//         if (!element) {
+//           throw new Error(`Element ${id} not found.`);
+//         }
+//         devDoc.head.append(element);
+//       });
 
-      return "<!DOCTYPE html>\n" + devDoc.documentElement.outerHTML;
-    },
-  };
-};
+//       return "<!DOCTYPE html>\n" + devDoc.documentElement.outerHTML;
+//     },
+//   };
+// };
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -109,7 +109,7 @@ export default defineConfig({
     dedupe: ["react", "react-dom", "@emotion/react", "@emotion/cache"],
   },
   plugins: [
-    htmlDevPlugin(),
+    // htmlDevPlugin(),
     react({
       tsDecorators: true,
       plugins: isDev
@@ -121,4 +121,12 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
+  optimizeDeps: {
+    include: ["src/protos"],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/src\/protos/, /node_modules/],
+    },
+  },
 });
