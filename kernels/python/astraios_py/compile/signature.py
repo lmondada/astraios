@@ -109,7 +109,7 @@ class Signature:
 #         return self._to_scope_symbol(self._inputs)
 
 
-def find_signature(code: str, scope: list[Variable]) -> Signature:
+def find_signature(code: str) -> Signature:
     """
     Find the signature of a function.
 
@@ -189,7 +189,7 @@ def format_name_type_pair(
     """
 
     def to_str(symb: Variable):
-        return symb.varType if type_only else f"{symb.name}: {symb.varType}"
+        return symb.type if type_only else f"{symb.name}: {symb.type}"
 
     vars_name_type_pairs = {v.name: to_str(v) for v in variables}
     return list(map(lambda v: vars_name_type_pairs[v], var_names))

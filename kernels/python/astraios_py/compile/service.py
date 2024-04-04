@@ -44,7 +44,7 @@ def compile_cell(code: str, worker_id: UUID, cell_id: str) -> CompiledFunction:
     """
     The actual compilation action.
     """
-    sig = find_signature(code, [])
+    sig = find_signature(code)
     fn_name = random_function_name()
     print(f"fn_name = {fn_name}")
     worker = Worker.get_worker(worker_id)
