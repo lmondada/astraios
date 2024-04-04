@@ -1,22 +1,23 @@
 services:
   envoy:
     build:
-      context: .
+      context: ./envoy
       dockerfile: Dockerfile
     image: astraios/envoy
     ports:
       - "8080:8080"
-  nginx:
-    image: nginx:latest
-    volumes:
-      - ./frontend/dist:/usr/share/nginx/html
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.${APP_ENV:-prod}
+    image: astraios/frontend
     ports:
       - "80:80"
-    command: ["/bin/sh", "-c", "nginx -g 'daemon off;'"]
   py-kernel:
     build:
       context: ./kernels/python
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.${APP_ENV:-prod}
     image: astraios/py-kernel
-    ports:
-      - "9090:9090"
+    # This is proxied by envoy, so we don't need to expose in production
+    # ports:
+    #   - "9090:9090"

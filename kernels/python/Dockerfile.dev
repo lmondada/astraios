@@ -1,0 +1,21 @@
+# Use an official Python runtime as a parent image
+FROM python:3.10-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Install Hatch
+# RUN pip install hatch
+
+RUN apt-get update && \
+    apt-get install -y git protobuf-compiler && \
+    rm -rf /var/lib/apt/lists/*
+
+# Preinstall dependencies.
+# These files should get overriden once a volume is mounted
+COPY . /app
+RUN pip install -e .
+
+# Start server -- unfortunately no way to pre-install dependencies?
+CMD ["python", "-m", "astraios_py"]
+

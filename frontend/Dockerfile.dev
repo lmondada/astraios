@@ -1,0 +1,13 @@
+FROM node:21
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Install project dependencies (reminder: volumes are only at runtime)
+COPY ./package.json .
+RUN pnpm install
+
+CMD ["pnpm", "dev", "--host=0.0.0.0"]
