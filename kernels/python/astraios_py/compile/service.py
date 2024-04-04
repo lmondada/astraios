@@ -18,15 +18,26 @@ from ..protos.compile_pb2 import (
 
 class CompilationServicer(compile_pb2_grpc.CompilationServicer):
     def Compile(self, request: CompileRequest, context) -> Iterator[CompileResponse]:
-        if len(request.CellContents) != 1:
-            yield CompileError(error="Only one cell is supported")
+        print("compiling")
+        if len(request.cell_contents) != 1:
+            # yield CompileError(error="Only one cell is supported")
+            print("more than one cell?")
+            yield CompileResponse(
+                status=CompileStatus(status="Only one cell is supported")
+            )
             return
-        yield CompileStatus(status="Compiling")
-        cell_id = request.cell_contents.keys()[0]
+        print("yielding status")
+        yield CompileResponse(status=CompileStatus(status="Compiling"))
+        print("yielded status")
+        cell_id = next(iter(request.cell_contents.keys()))
+        print("got cell id")
         cell_content = request.cell_contents[cell_id]
+        print("got cell content")
         worker_id = UUID(request.worker_id)
+        print("got worker id")
         result = compile_cell(cell_content, worker_id, cell_id)
-        yield CompileResult(func_ids={cell_id: result})
+        print("compiled cell")
+        yield CompileResponse(result=CompileResult(func_ids={cell_id: result}))
 
 
 def compile_cell(code: str, worker_id: UUID, cell_id: str) -> CompiledFunction:

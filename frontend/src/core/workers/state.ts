@@ -3,7 +3,7 @@ import { Worker, Workers, WorkersState } from "./types";
 import { createReducer } from "@/utils/createReducer";
 import { useEffect, useMemo } from "react";
 import { WorkerCreationClient } from "@/protos/WorkerServiceClientPb";
-import * as worker_pb from "@/protos/worker_pb";
+import { CreateWorkerRequest } from "@/protos/worker_pb";
 
 function initialState(): WorkersState {
   return {
@@ -129,16 +129,10 @@ export function useCreateWorkerConnection() {
     useWorkersActions();
 
   useEffect(() => {
-    // AbortController to cancel the fetch requests at unmount
-    // const abortController = new AbortController();
-    // const signal = abortController.signal;
+    const request = new CreateWorkerRequest();
 
-    const workerCreationClient = new WorkerCreationClient(
-      "http://localhost:8080",
-    );
-    const request = new worker_pb.CreateWorkerRequest();
-
-    const fetchAndUpdateWorkerConnection = async (url: string) => {
+    const fetchAndUpdateWorkerConnection = (url: string) => {
+      const workerCreationClient = new WorkerCreationClient(url);
       workerCreationClient.createWorker(request, {}, (err, response) => {
         if (err) {
           console.error("Failed to fetch worker metadata:", err);
@@ -154,10 +148,5 @@ export function useCreateWorkerConnection() {
     connectingWorkers.forEach((worker) => {
       fetchAndUpdateWorkerConnection(worker.url);
     });
-
-    // Cleanup function
-    // return () => {
-    //   abortController.abort();
-    // };
   }, [connectingWorkers]);
 }
