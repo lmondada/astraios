@@ -63,6 +63,11 @@ export function createWorkersRequests(): EditRequests & RunRequests {
           break;
       }
     }
+    return null;
   };
+  requests.sendCodeCompletionRequest = async (request) => {
+    return null;
+  };
+
   return requests;
 }
