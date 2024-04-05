@@ -147,7 +147,7 @@
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "gen-proto": "protoc --ts_out src/protos --proto_path ../protos"
+    "gen-proto": "protoc --ts_out src --proto_path .."
   },
   "peerDependencies": {
     "react": "^17 || ^18",

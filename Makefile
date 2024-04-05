@@ -39,10 +39,10 @@ frontend/src/protos:
 
 
 frontend/src/protos/compile.ts: protos/compile.proto frontend/src/protos
-	cd frontend && pnpm gen-proto compile.proto
+	cd frontend && pnpm gen-proto protos/compile.proto
 
 frontend/src/protos/worker.ts: protos/worker.proto frontend/src/protos
-	cd frontend && pnpm gen-proto worker.proto
+	cd frontend && pnpm gen-proto protos/worker.proto
 
 frontend/src/protos/tierkreis/graph.ts: protos/tierkreis/graph.proto frontend/src/protos
-	cd frontend && pnpm gen-proto tierkreis/graph.proto
+	cd frontend && pnpm gen-proto protos/tierkreis/graph.proto

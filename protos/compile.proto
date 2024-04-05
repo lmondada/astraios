@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package astraios.compile;
 
+import "protos/tierkreis/graph.proto";
+
 message CompileRequest {
   // Map from CellIds to code
   map<string, string> cell_contents = 1;
@@ -11,7 +13,7 @@ message CompileRequest {
 
 message Variable {
     string name = 1;
-    string type = 2;
+    tierkreis.v1alpha1.graph.Type type = 2;
 }
 
 message CompiledFunction {
