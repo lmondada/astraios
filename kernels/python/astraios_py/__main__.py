@@ -6,9 +6,9 @@ from concurrent import futures
 
 from astraios_py.compile.service import CompilationServicer
 from astraios_py.worker import WorkerCreationServicer
-from astraios_py.protos.compile_pb2_grpc import add_CompilationServicer_to_server
-from astraios_py.protos.worker_pb2_grpc import add_WorkerCreationServicer_to_server
-from astraios_py.protos import compile_pb2
+from protos.compile_pb2_grpc import add_CompilationServicer_to_server
+from protos.worker_pb2_grpc import add_WorkerCreationServicer_to_server
+from protos import compile_pb2
 
 import grpc
 from grpc_reflection.v1alpha import reflection

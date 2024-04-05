@@ -9,7 +9,7 @@ from mypy.build import build, BuildSource, BuildResult, Options
 from mypy.nodes import Var
 from mypy.errorcodes import NAME_DEFINED
 
-from ..protos.compile_pb2 import Variable
+from protos.compile_pb2 import Variable
 
 
 class ImmutableInputVar(Exception):

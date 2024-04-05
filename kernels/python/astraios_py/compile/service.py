@@ -5,8 +5,8 @@ from .signature import find_signature
 from .codegen import as_tierkreis_function_str, random_function_name
 from ..worker import Worker
 
-from ..protos import compile_pb2_grpc
-from ..protos.compile_pb2 import (
+from protos import compile_pb2_grpc
+from protos.compile_pb2 import (
     CompileResult,
     CompileRequest,
     CompileResponse,

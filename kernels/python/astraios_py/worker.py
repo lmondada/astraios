@@ -5,7 +5,7 @@ Python code execution using Tierkreis workers
 from typing import Union
 from uuid import uuid4, UUID
 
-from astraios_py.protos import worker_pb2_grpc, worker_pb2
+from protos import worker_pb2_grpc, worker_pb2
 
 import grpc
 from tierkreis.worker.namespace import Namespace as WorkerNS
