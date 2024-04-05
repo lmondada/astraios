@@ -121,12 +121,12 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
-  optimizeDeps: {
-    include: ["src/protos"],
-  },
-  build: {
-    commonjsOptions: {
-      include: [/src\/protos/, /node_modules/],
-    },
-  },
+  // optimizeDeps: {
+  //   include: ["src/protos"],
+  // },
+  // build: {
+  //   commonjsOptions: {
+  //     include: [/src\/protos/, /node_modules/],
+  //   },
+  // },
 });

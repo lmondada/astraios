@@ -71,6 +71,15 @@ dependencies:
   '@open-rpc/client-js':
     specifier: ^1.8.1
     version: 1.8.1
+  '@protobuf-ts/grpcweb-transport':
+    specifier: ^2.9.4
+    version: 2.9.4
+  '@protobuf-ts/runtime':
+    specifier: ^2.9.4
+    version: 2.9.4
+  '@protobuf-ts/runtime-rpc':
+    specifier: ^2.9.4
+    version: 2.9.4
   '@radix-ui/colors':
     specifier: ^3.0.0
     version: 3.0.0
@@ -218,15 +227,9 @@ dependencies:
   eslint-plugin-header:
     specifier: ^3.1.1
     version: 3.1.1(eslint@8.57.0)
-  google-protobuf:
-    specifier: ^3.21.2
-    version: 3.21.2
   graphology:
     specifier: ^0.25.4
     version: 0.25.4(graphology-types@0.24.7)
-  grpc-web:
-    specifier: ^1.5.0
-    version: 1.5.0
   htm:
     specifier: ^3.1.1
     version: 3.1.1
@@ -346,6 +349,9 @@ devDependencies:
   '@playwright/test':
     specifier: ^1.42.1
     version: 1.42.1
+  '@protobuf-ts/plugin':
+    specifier: ^2.9.4
+    version: 2.9.4
   '@storybook/addon-docs':
     specifier: ^7.6.17
     version: 7.6.17(@types/react-dom@18.2.22)(@types/react@18.2.72)(react-dom@18.2.0)(react@18.2.0)
@@ -3425,6 +3431,44 @@ packages:
   /@popperjs/core@2.11.8:
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
     dev: false
+
+  /@protobuf-ts/grpcweb-transport@2.9.4:
+    resolution: {integrity: sha512-6aQgwPTgX6FkqWqmNts3uk8T/C5coJoH7U87zgaZY/Wo2EVa9SId5bXTM8uo4WR+CN8j9W4c9ij1yG13Hc3xUw==}
+    dependencies:
+      '@protobuf-ts/runtime': 2.9.4
+      '@protobuf-ts/runtime-rpc': 2.9.4
+    dev: false
+
+  /@protobuf-ts/plugin-framework@2.9.4:
+    resolution: {integrity: sha512-9nuX1kjdMliv+Pes8dQCKyVhjKgNNfwxVHg+tx3fLXSfZZRcUHMc1PMwB9/vTvc6gBKt9QGz5ERqSqZc0++E9A==}
+    dependencies:
+      '@protobuf-ts/runtime': 2.9.4
+      typescript: 3.9.10
+    dev: true
+
+  /@protobuf-ts/plugin@2.9.4:
+    resolution: {integrity: sha512-Db5Laq5T3mc6ERZvhIhkj1rn57/p8gbWiCKxQWbZBBl20wMuqKoHbRw4tuD7FyXi+IkwTToaNVXymv5CY3E8Rw==}
+    hasBin: true
+    dependencies:
+      '@protobuf-ts/plugin-framework': 2.9.4
+      '@protobuf-ts/protoc': 2.9.4
+      '@protobuf-ts/runtime': 2.9.4
+      '@protobuf-ts/runtime-rpc': 2.9.4
+      typescript: 3.9.10
+    dev: true
+
+  /@protobuf-ts/protoc@2.9.4:
+    resolution: {integrity: sha512-hQX+nOhFtrA+YdAXsXEDrLoGJqXHpgv4+BueYF0S9hy/Jq0VRTVlJS1Etmf4qlMt/WdigEes5LOd/LDzui4GIQ==}
+    hasBin: true
+    dev: true
+
+  /@protobuf-ts/runtime-rpc@2.9.4:
+    resolution: {integrity: sha512-y9L9JgnZxXFqH5vD4d7j9duWvIJ7AShyBRoNKJGhu9Q27qIbchfzli66H9RvrQNIFk5ER7z1Twe059WZGqERcA==}
+    dependencies:
+      '@protobuf-ts/runtime': 2.9.4
+
+  /@protobuf-ts/runtime@2.9.4:
+    resolution: {integrity: sha512-vHRFWtJJB/SiogWDF0ypoKfRIZ41Kq+G9cEFj6Qm1eQaAhJ1LDFvgZ7Ja4tb3iLOQhz0PaoPnnOijF1qmEqTxg==}
 
   /@radix-ui/colors@3.0.0:
     resolution: {integrity: sha512-FUOsGBkHrYJwCSEtWRCIfQbZG7q1e6DgxCIOe1SUQzDe/7rXXeA47s8yCn6fuTNQAj1Zq4oTFi9Yjp3wzElcxg==}
@@ -11210,10 +11254,6 @@ packages:
       xtend: 4.0.2
     dev: false
 
-  /google-protobuf@3.21.2:
-    resolution: {integrity: sha512-3MSOYFO5U9mPGikIYCzK0SaThypfGgS6bHqrUGXG3DPHCrb+txNqeEcns1W0lkGfk0rCyNXm7xB9rMxnCiZOoA==}
-    dev: false
-
   /gopd@1.0.1:
     resolution: {integrity: sha512-d65bNlIadxvpb/A2abVdlqKqV563juRnZ1Wtk6s1sIR8uNsXR70xqIzVqxVf1eTqDunwT2MkczEeaezCKTZhwA==}
     dependencies:
@@ -11241,10 +11281,6 @@ packages:
 
   /grid-index@1.1.0:
     resolution: {integrity: sha512-HZRwumpOGUrHyxO5bqKZL0B0GlUpwtCAzZ42sgxUPniu33R1LSFH5yrIcBCHjkctCAh3mtWKcKd9J4vDDdeVHA==}
-    dev: false
-
-  /grpc-web@1.5.0:
-    resolution: {integrity: sha512-y1tS3BBIoiVSzKTDF3Hm7E8hV2n7YY7pO0Uo7depfWJqKzWE+SKr0jvHNIJsJJYILQlpYShpi/DRJJMbosgDMQ==}
     dev: false
 
   /gunzip-maybe@1.4.2:
@@ -16827,6 +16863,12 @@ packages:
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: false
+
+  /typescript@3.9.10:
+    resolution: {integrity: sha512-w6fIxVE/H1PkLKcCPsFqKE7Kv7QUwhU8qQY2MueZXWx5cPZdwFupLgKK3vntcK98BtNHZtAF4LA/yl2a7k8R6Q==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
 
   /typescript@5.4.3:
     resolution: {integrity: sha512-KrPd3PKaCLr78MalgiwJnA25Nm8HAmdwN3mYUYZgG/wizIo9EainNVQI9/yDavtVFRN2h3k8uf3GLHuhDMgEHg==}

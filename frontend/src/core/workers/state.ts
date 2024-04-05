@@ -2,8 +2,9 @@ import { atom, useAtomValue, useSetAtom } from "jotai";
 import { Worker, Workers, WorkersState } from "./types";
 import { createReducer } from "@/utils/createReducer";
 import { useEffect, useMemo } from "react";
-import { WorkerCreationClient } from "@/protos/WorkerServiceClientPb";
-import { CreateWorkerRequest } from "@/protos/worker_pb";
+import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
+import { WorkerCreationClient } from "@/protos/worker.client";
+import { CreateWorkerResponse } from "@/protos/worker";
 
 function initialState(): WorkersState {
   return {
@@ -129,20 +130,20 @@ export function useCreateWorkerConnection() {
     useWorkersActions();
 
   useEffect(() => {
-    const request = new CreateWorkerRequest();
-
-    const fetchAndUpdateWorkerConnection = (url: string) => {
-      const workerCreationClient = new WorkerCreationClient(url);
-      workerCreationClient.createWorker(request, {}, (err, response) => {
-        if (err) {
-          console.error("Failed to fetch worker metadata:", err);
-          setWorkerFailed({ url });
-        }
-        const workerId = response.getWorkerId();
-        const name = response.getName();
-        setWorkerConnected({ url, workerId, name });
-        setDefaultWorkerIfNull(workerId);
+    const fetchAndUpdateWorkerConnection = async (url: string) => {
+      const transport = new GrpcWebFetchTransport({
+        baseUrl: url,
       });
+      const workerCreation = new WorkerCreationClient(transport);
+      try {
+        let { response }: { response: CreateWorkerResponse } =
+          await workerCreation.createWorker({});
+        setWorkerConnected({ url, ...response });
+        setDefaultWorkerIfNull(response.workerId);
+      } catch (err) {
+        console.error("Failed to fetch worker metadata:", err);
+        setWorkerFailed({ url });
+      }
     };
 
     connectingWorkers.forEach((worker) => {
