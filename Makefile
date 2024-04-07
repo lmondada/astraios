@@ -46,3 +46,9 @@ frontend/src/protos/worker.ts: protos/worker.proto frontend/src/protos
 
 frontend/src/protos/tierkreis/graph.ts: protos/tierkreis/graph.proto frontend/src/protos
 	cd frontend && pnpm gen-proto protos/tierkreis/graph.proto
+
+clean:
+	rm -f kernels/python/protos-gen/protos/*pb2*.py*
+	rm -f kernels/python/protos-gen/protos/tierkreis/*pb2*.py*
+	rm -rf kernels/python/protos-gen/*.egg-info
+	rm -rf kernels/python/protos-gen/build

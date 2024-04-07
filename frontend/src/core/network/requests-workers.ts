@@ -1,6 +1,5 @@
 import { createNetworkRequests } from "./requests-network";
 import { EditRequests, RunRequests } from "./types";
-import { zip } from "lodash-es";
 import { CellId } from "../cells/ids";
 import { VariableName } from "../variables/types";
 import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
@@ -42,18 +41,12 @@ export function createWorkersRequests(): EditRequests & RunRequests {
         case "result":
           const compiledFuncs = response.result;
           for (const cell of Object.values(compiledFuncs.funcIds)) {
-            const variables = Object.values(cell.variables).map((variable) => {
-              return {
-                name: variable.name as VariableName,
-                varType: variable.type,
-              };
-            });
             handleResult({
               cellId: cell.cellId as CellId,
               funcId: cell.funcId,
               inputs: cell.inputs as VariableName[],
               outputs: cell.outputs as VariableName[],
-              variables,
+              variables: Object.values(cell.variables),
             });
           }
           break;

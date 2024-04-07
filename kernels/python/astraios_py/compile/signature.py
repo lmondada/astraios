@@ -10,6 +10,7 @@ from mypy.nodes import Var
 from mypy.errorcodes import NAME_DEFINED
 
 from protos.compile_pb2 import Variable
+from protos.tierkreis.graph_pb2 import Type, Empty
 
 
 class ImmutableInputVar(Exception):
@@ -143,7 +144,9 @@ def find_signature(code: str) -> Signature:
                     if var_name not in inputs:
                         print(f"Adding new input: {var_name}")
                         inputs.append(var_name)
-                        variables.append(Variable(name=var_name, type="int"))
+                        variables.append(
+                            Variable(name=var_name, type=Type(int=Empty()))
+                        )
                         added_new_inputs = True
                 else:
                     pass  # TODO: handle other error codes
@@ -189,17 +192,41 @@ def format_name_type_pair(
     """
 
     def to_str(symb: Variable):
-        return symb.type if type_only else f"{symb.name}: {symb.type}"
+        type_str = ""
+        match symb.type.WhichOneof("type"):
+            case "int":
+                type_str = "int"
+            case "str":
+                type_str = "str"
+            case "flt":
+                type_str = "float"
+            case "bool":
+                type_str = "bool"
+            case "vec":
+                type_str = "list[int]"
+            case _:
+                raise ValueError(f"Unknown type: {symb.type}")
+        return type_str if type_only else f"{symb.name}: {type_str}"
 
     vars_name_type_pairs = {v.name: to_str(v) for v in variables}
     return list(map(lambda v: vars_name_type_pairs[v], var_names))
 
 
-def get_var_type(var: Var) -> str:
+def get_var_type(var: Var) -> Type:
     """
     Get the type of a variable.
     """
-    type_repr = repr(var.type)
-    if type_repr.startswith("builtins."):
-        return type_repr[9:]
-    return type_repr
+    match repr(var.type):
+        case "builtins.int":
+            return Type(int=Empty())
+        case "builtins.str":
+            return Type(str=Empty())
+        case "builtins.float":
+            return Type(flt=Empty())
+        case "builtins.bool":
+            return Type(bool=Empty())
+        case "builtins.list":
+            # TODO: choose correct vec type
+            return Type(vec=Type(int=Empty()))
+        case _:
+            raise ValueError(f"Unknown type: {var.type}")
