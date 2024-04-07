@@ -6,6 +6,7 @@ import { useVariablesActions } from "@/core/variables/state";
 import { useEffect, useMemo } from "react";
 import { CellId } from "@/core/cells/ids";
 import { createReducer } from "@/utils/createReducer";
+import { Type } from "@/protos/tierkreis/graph";
 
 const dataflowGraph = atom<Graph>(new Graph());
 const compiledCells = atom<Record<CellId, CompiledCell>>({});
@@ -28,6 +29,33 @@ const { reducer, createActions } = createReducer(initialState, {
  */
 export function useCompiledCells() {
   return useAtomValue(compiledCells);
+}
+
+/**
+ * React hook to get the current scope of all but the given cell.
+ *
+ * @param cellId The cell id to exclude from the scope.
+ * @returns The current scope of all but the given cell.
+ */
+export function useCurrentScope(cellId?: CellId): Record<string, Type> {
+  const cells = useCompiledCells();
+  return useMemo(() => {
+    let scope: Record<string, Type> = {};
+    for (const cell of Object.values(cells)) {
+      if (cell.cellId !== cellId) {
+        for (const varName of cell.outputs) {
+          const varType = cell.variables.find((v) => v.name === varName)?.type;
+          if (!varType) {
+            throw new Error(
+              `Output ${varName} of cell ${cellId} is not defined`,
+            );
+          }
+          scope[varName] = varType;
+        }
+      }
+    }
+    return scope;
+  }, [cells, cellId]);
 }
 
 /**
@@ -58,19 +86,23 @@ export function useUpdateDataflowGraph() {
       g.addNode(cellId, cell);
       // Mark input variables as used in cellId
       for (const varInput of cell.inputs) {
+        const dataType = cell.variables.find((v) => v.name === varInput)?.type;
         variables[varInput] = variables[varInput] || {
           name: varInput,
           declaredBy: [],
           usedBy: [],
+          dataType,
         };
         variables[varInput].usedBy.push(cellId);
       }
       // Mark output variables as declared in cellId
       for (const varOutput of cell.outputs) {
+        const dataType = cell.variables.find((v) => v.name === varOutput)?.type;
         variables[varOutput] = variables[varOutput] || {
           name: varOutput,
           declaredBy: [],
           usedBy: [],
+          dataType,
         };
         variables[varOutput].declaredBy.push(cellId);
       }

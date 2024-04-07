@@ -6,6 +6,7 @@ from .codegen import as_tierkreis_function_str, random_function_name
 from ..worker import Worker
 
 from protos import compile_pb2_grpc
+from protos.tierkreis.graph_pb2 import Type
 from protos.compile_pb2 import (
     CompileResult,
     CompileRequest,
@@ -27,15 +28,18 @@ class CompilationServicer(compile_pb2_grpc.CompilationServicer):
         cell_id = next(iter(request.cell_contents.keys()))
         cell_content = request.cell_contents[cell_id]
         worker_id = UUID(request.worker_id)
-        result = compile_cell(cell_content, worker_id, cell_id)
+        scope = request.scope
+        result = compile_cell(cell_content, worker_id, cell_id, scope)
         yield CompileResponse(result=CompileResult(func_ids={cell_id: result}))
 
 
-def compile_cell(code: str, worker_id: UUID, cell_id: str) -> CompiledFunction:
+def compile_cell(
+    code: str, worker_id: UUID, cell_id: str, scope: dict[str, Type]
+) -> CompiledFunction:
     """
     The actual compilation action.
     """
-    sig = find_signature(code)
+    sig = find_signature(code, scope)
     fn_name = random_function_name()
     worker = Worker.get_worker(worker_id)
     assert worker

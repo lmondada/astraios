@@ -28,6 +28,7 @@ import { DataTableColumnHeader } from "../data-table/column-header";
 import { sortBy } from "lodash-es";
 import { getCellEditorView } from "@/core/cells/cells";
 import { goToDefinition } from "@/core/codemirror/find-replace/search-highlight";
+import { Type } from "@/protos/tierkreis/graph";
 
 interface Props {
   className?: string;
@@ -99,7 +100,7 @@ const COLUMNS = [
       return (
         <div className="max-w-[150px]">
           <div className="text-ellipsis overflow-hidden whitespace-nowrap text-muted-foreground font-mono text-xs">
-            {dataType}
+            {dataType ? display_type(dataType) : "any"}
           </div>
           <div
             className="text-ellipsis overflow-hidden whitespace-nowrap"
@@ -280,3 +281,7 @@ export const VariableTable: React.FC<Props> = memo(
   },
 );
 VariableTable.displayName = "VariableTable";
+
+function display_type(type: Type): string {
+  return "tk." + type.type.oneofKind;
+}

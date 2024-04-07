@@ -6,6 +6,7 @@ import { CellConfig } from "../cells/types";
 import { RequestId } from "./DeferredRequestRegistry";
 import { FilePath } from "@/utils/paths";
 import { CompiledCell } from "../workers/runtime/types";
+import { Type } from "@/protos/tierkreis/graph";
 
 // Ideally this would be generated from server.py, but for now we just
 // manually keep them in sync.
@@ -173,6 +174,7 @@ export type SendRunOptions<RES> = {
   handlers: CompilationHandlers<RES>;
   baseUrl: string;
   workerId: string;
+  scope: Record<string, Type>;
 };
 
 /**

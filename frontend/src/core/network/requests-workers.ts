@@ -32,6 +32,7 @@ export function createWorkersRequests(): EditRequests & RunRequests {
     let compilationRequest = compilation.compile({
       workerId: options.workerId,
       cellContents,
+      scope: options.scope,
     });
 
     for await (let responseUntyped of compilationRequest.responses) {

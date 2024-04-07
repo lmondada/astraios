@@ -12,6 +12,7 @@ import { SendRunOptions } from "@/core/network/types";
 import { useCompilationHandlers } from "@/core/workers/runtime/compilation";
 import { CompiledCell } from "@/core/workers/runtime/types";
 import { useConnectedWorkers } from "@/core/workers/state";
+import { useCurrentScope } from "@/core/workers/runtime/state";
 
 /**
  * Creates a function that runs all cells that have been edited or interrupted.
@@ -43,6 +44,7 @@ export function useRunCell(cellId: CellId | undefined) {
 function useRunCells() {
   const notebook = useNotebook();
   const workers = useConnectedWorkers();
+  const scope = useCurrentScope();
 
   const runCells = useEvent(async (cellIds: CellId[]) => {
     if (cellIds.length === 0) {
@@ -74,6 +76,7 @@ function useRunCells() {
         ...useCompilationHandlers(),
         baseUrl: workerUrl as string,
         workerId: workerId as string,
+        scope,
       };
     }
 

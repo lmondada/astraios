@@ -9,6 +9,8 @@ message CompileRequest {
   map<string, string> cell_contents = 1;
   // Worker to submit compiled code to
   string worker_id = 2;
+  // Map of known variables and their types
+  map<string, tierkreis.v1alpha1.graph.Type> scope = 3;
 }
 
 message Variable {

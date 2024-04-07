@@ -48,6 +48,7 @@ import { RuntimeMode, getRuntimeMode } from "@/utils/runtimeMode";
 import { SendRunOptions } from "@/core/network/types";
 import { useCompilationHandlers } from "@/core/workers/runtime/compilation";
 import { CompiledCell } from "@/core/workers/runtime/types";
+import { useCurrentScope } from "@/core/workers/runtime/state";
 
 /**
  * Imperative interface of the cell.
@@ -202,6 +203,7 @@ const CellComponent = (
   const connectedWorkers = useConnectedWorkers();
   const workerUrl =
     connectedWorkers.find((w) => w.workerId === workerId)?.url ?? null;
+  const scope = useCurrentScope(cellId);
 
   let opts: SendRunOptions<CompiledCell> | undefined;
   if (getRuntimeMode() === RuntimeMode.Workers && workerUrl && workerId) {
@@ -209,6 +211,7 @@ const CellComponent = (
       ...compliationHandlers,
       baseUrl: workerUrl,
       workerId,
+      scope,
     };
   }
 

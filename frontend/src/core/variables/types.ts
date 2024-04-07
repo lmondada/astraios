@@ -2,6 +2,7 @@
 
 import { CellId } from "../cells/ids";
 import { TypedString } from "../../utils/typed";
+import { Type } from "@/protos/tierkreis/graph";
 
 export type VariableName = TypedString<"VariableName">;
 
@@ -16,7 +17,7 @@ export interface Variable {
   /**
    * Type of the value.
    */
-  dataType?: string;
+  dataType?: Type;
 }
 
 export type Variables = Record<VariableName, Variable>;

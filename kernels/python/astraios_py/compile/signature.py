@@ -110,7 +110,7 @@ class Signature:
 #         return self._to_scope_symbol(self._inputs)
 
 
-def find_signature(code: str) -> Signature:
+def find_signature(code: str, scope: dict[str, Type]) -> Signature:
     """
     Find the signature of a function.
 
@@ -136,18 +136,23 @@ def find_signature(code: str) -> Signature:
         for errors in res.manager.errors.error_info_map.values():
             for error in errors:
                 if error.code == NAME_DEFINED:
-                    match = re.search(r'^Name "(\w+)" is not defined$', error.message)
+                    err_match = re.search(
+                        r'^Name "(\w+)" is not defined$', error.message
+                    )
                     assert (
-                        match is not None
+                        err_match is not None
                     ), f"Unexpected error message: {error.message}"
-                    var_name = match.group(1)
+                    var_name = err_match.group(1)
                     if var_name not in inputs:
-                        print(f"Adding new input: {var_name}")
-                        inputs.append(var_name)
-                        variables.append(
-                            Variable(name=var_name, type=Type(int=Empty()))
-                        )
-                        added_new_inputs = True
+                        if var_name in scope:
+                            print(f"Adding new input: {var_name}")
+                            inputs.append(var_name)
+                            variables.append(
+                                Variable(name=var_name, type=scope[var_name])
+                            )
+                            added_new_inputs = True
+                        else:
+                            raise ValueError(f"Variable {var_name} not in scope")
                 else:
                     pass  # TODO: handle other error codes
 
