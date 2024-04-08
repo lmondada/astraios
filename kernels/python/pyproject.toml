@@ -1,81 +1,39 @@
+[project]
+name = "astraios-py"
+version = "0.1.0"
+description = "Python kernel for Astraios"
+authors = [{ name = "Luca Mondada", email = "luca@mondada.net" }]
+dependencies = [
+    "betterproto>=2.0.0b6",
+    "grpclib>=0.4.3rc0, <0.5",
+    "tierkreis@git+https://github.com/lmondada/tierkreis.git@0cdea9755a91348aacb26400954ebf0af8943aae",
+    "mypy>=1.0",
+    "asyncio>=3.4.3",
+]
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[project]
-name = "astraios-py"
-dynamic = ["version"]
-description = 'Python kernel for Astraios'
-readme = "README.md"
-requires-python = ">=3.8"
-license = "MIT"
-keywords = []
-authors = [{ name = "Luca Mondada", email = "luca@mondada.net" }]
-classifiers = [
-  "Development Status :: 4 - Beta",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
-]
-dependencies = [
-  "grpcio-tools>=1.62",
-  "mypy>=1.0",
-  "tierkreis@git+https://github.com/lmondada/tierkreis.git@0cdea97",
-  "grpcio-reflection",
-  "protos@{root:uri}/protos-gen/",
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "betterproto[compiler]>=2.0.0b6",
+    "watchdog[watchmedo]>=4.0.0",
+    "pytest>=8.1.1",
+    "pytest-asyncio>=0.23.6",
 ]
 
-[project.urls]
-Documentation = "https://github.com/lmondada/astraios"
-Issues = "https://github.com/lmondada/astraios/issues"
-Source = "https://github.com/lmondada/astraios"
+[tool.rye.scripts]
+gen-proto = "protoc -I ../../protos --python_betterproto_out=src/astraios_py/protos"
+serve = "python src/astraios_py/__main__.py"
+serve-dev = "watchmedo auto-restart --recursive --pattern=\"*.py\" --directory=\"src/astraios_py\" python -- -m astraios_py"
 
-[tool.hatch.version]
-path = "astraios_py/__about__.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
-[tool.hatch.envs.default]
-# pre-install-commands = ["pip install -e ../../../tmp/tierkreis"]
-dependencies = [
-  "coverage[toml]>=6.5",
-  "pytest",
-  "pylint>=3.1.0",
-  "black>=24.3.0",
-]
-
-[tool.hatch.envs.default.scripts]
-serve = "python -m astraios_py"
-test = "pytest {args:tests}"
-test-cov = "coverage run -m pytest {args:tests}"
-cov-report = ["- coverage combine", "coverage report"]
-cov = ["test-cov", "cov-report"]
-
-[[tool.hatch.envs.all.matrix]]
-python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
-
-[tool.hatch.envs.types]
-dependencies = ["mypy>=1.0.0"]
-
-
-[tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/astraios_py tests}"
-
-[tool.coverage.run]
-source_pkgs = ["astraios_py", "tests"]
-branch = true
-parallel = true
-omit = ["src/astraios_py/__about__.py"]
-
-[tool.coverage.paths]
-astraios_py = ["src/astraios_py", "*/astraios-py/src/astraios_py"]
-tests = ["tests", "*/astraios-py/tests"]
-
-[tool.coverage.report]
-exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/astraios_py"]

@@ -4,18 +4,20 @@ FROM python:3.10-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install Hatch
-# RUN pip install hatch
-
+# Install git and protoc
 RUN apt-get update && \
     apt-get install -y git protobuf-compiler && \
     rm -rf /var/lib/apt/lists/*
 
 # Preinstall dependencies.
-# These files should get overriden once a volume is mounted
 COPY . /app
-RUN pip install -e .
+# COPY requirements-dev.lock ./
+RUN PYTHONDONTWRITEBYTECODE=1 pip install --no-cache-dir -r requirements.lock
+RUN PYTHONDONTWRITEBYTECODE=1 pip install --no-cache-dir -r requirements-dev.lock
 
-# Start server -- unfortunately no way to pre-install dependencies?
+# RUN pip install -e .
+
+# TODO: make this work
+# CMD ["watchmedo", "auto-restart", "--recursive", "--pattern=\"*.py\"", "--directory=\"/app/src/astraios_py\"", "python", "--", "-m", "src/astraios_py/__main__.py"]
+
 CMD ["python", "-m", "astraios_py"]
-

@@ -5,25 +5,24 @@ Python code execution using Tierkreis workers
 from typing import Union
 from uuid import uuid4, UUID
 
-from protos import worker_pb2_grpc, worker_pb2
+from .protos.astraios.worker import (
+    WorkerCreationBase,
+    CreateWorkerRequest,
+    CreateWorkerResponse,
+)
 
-import grpc
 from tierkreis.worker.namespace import Namespace as WorkerNS
 from tierkreis.pyruntime import PyRuntime
 from tierkreis.builder import Namespace
 
 
-class WorkerCreationServicer(worker_pb2_grpc.WorkerCreationServicer):
-    def CreateWorker(
-        self, request: worker_pb2.CreateWorkerRequest, context: grpc.ServicerContext
-    ) -> worker_pb2.CreateWorkerResponse:
+class WorkerCreationService(WorkerCreationBase):
+    async def create_worker(self, request: CreateWorkerRequest) -> CreateWorkerResponse:
         """
         Create a new worker
         """
         worker = Worker.create_worker()
-        return worker_pb2.CreateWorkerResponse(
-            worker_id=str(worker.worker_id), name="Python"
-        )
+        return CreateWorkerResponse(worker_id=str(worker.worker_id), name="Python")
 
 
 class Worker:

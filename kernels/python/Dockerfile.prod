@@ -1,23 +1,16 @@
 # Use an official Python runtime as a parent image
 FROM python:3.10-slim
 
-# Install Hatch
-RUN pip install hatch
+# Set the working directory in the container
+WORKDIR /app
 
+# Install git and protoc
 RUN apt-get update && \
     apt-get install -y git protobuf-compiler && \
     rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
-WORKDIR /app
+# Install dependencies.
+COPY . /app
+RUN pip install -e .
 
-# Copy the current directory contents into the container at /app
-COPY ./astraios_py /app/astraios_py
-COPY ./pyproject.toml /app
-
-# Install dependencies
-RUN hatch env create
-
-# Run Hatch command (for example, to start a web server)
-CMD ["hatch", "run", "serve"]
-
+CMD ["python", "-m", "astraios_py"]

@@ -1,13 +1,13 @@
-from typing import Iterator
+from typing import AsyncIterator
 from uuid import UUID
 
 from .signature import find_signature
 from .codegen import as_tierkreis_function_str, random_function_name
 from ..worker import Worker
 
-from protos import compile_pb2_grpc
-from protos.tierkreis.graph_pb2 import Type
-from protos.compile_pb2 import (
+from ..protos.astraios.compile import CompilationBase
+from ..protos.tierkreis.v1alpha1.graph import Type
+from ..protos.astraios.compile import (
     CompileResult,
     CompileRequest,
     CompileResponse,
@@ -16,8 +16,8 @@ from protos.compile_pb2 import (
 )
 
 
-class CompilationServicer(compile_pb2_grpc.CompilationServicer):
-    def Compile(self, request: CompileRequest, context) -> Iterator[CompileResponse]:
+class CompilationService(CompilationBase):
+    async def compile(self, request: CompileRequest) -> AsyncIterator[CompileResponse]:
         if len(request.cell_contents) != 1:
             # yield CompileError(error="Only one cell is supported")
             yield CompileResponse(

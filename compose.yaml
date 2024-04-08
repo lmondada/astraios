@@ -19,5 +19,5 @@ services:
       dockerfile: Dockerfile.${APP_ENV:-prod}
     image: astraios/py-kernel
     # This is proxied by envoy, so we don't need to expose in production
-    # ports:
-    #   - "9090:9090"
+    ports:
+      - "9090:9090"

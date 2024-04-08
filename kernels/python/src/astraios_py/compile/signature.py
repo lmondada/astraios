@@ -9,8 +9,8 @@ from mypy.build import build, BuildSource, BuildResult, Options
 from mypy.nodes import Var
 from mypy.errorcodes import NAME_DEFINED
 
-from protos.compile_pb2 import Variable
-from protos.tierkreis.graph_pb2 import Type, Empty
+from ..protos.astraios.compile import Variable
+from ..protos.tierkreis.v1alpha1.graph import Type, Empty
 
 
 class ImmutableInputVar(Exception):
@@ -198,16 +198,16 @@ def format_name_type_pair(
 
     def to_str(symb: Variable):
         type_str = ""
-        match symb.type.WhichOneof("type"):
-            case "int":
+        match symb.type:
+            case Type(int=Empty()):
                 type_str = "int"
-            case "str":
+            case Type(str=Empty()):
                 type_str = "str"
-            case "flt":
+            case Type(flt=Empty()):
                 type_str = "float"
-            case "bool":
+            case Type(bool=Empty()):
                 type_str = "bool"
-            case "vec":
+            case Type(vec=Type(int=Empty())):
                 type_str = "list[int]"
             case _:
                 raise ValueError(f"Unknown type: {symb.type}")
