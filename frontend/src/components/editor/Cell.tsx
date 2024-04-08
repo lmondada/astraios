@@ -47,8 +47,8 @@ import { useConnectedWorkers, useDefaultWorkerId } from "@/core/workers/state";
 import { RuntimeMode, getRuntimeMode } from "@/utils/runtimeMode";
 import { SendRunOptions } from "@/core/network/types";
 import { useCompilationHandlers } from "@/core/workers/runtime/compilation";
-import { CompiledCell } from "@/core/workers/runtime/types";
 import { useCurrentScope } from "@/core/workers/runtime/state";
+import { CompiledCell } from "@/protos/compile";
 
 /**
  * Imperative interface of the cell.

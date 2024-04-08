@@ -1,6 +1,6 @@
 import { CompilationHandlers } from "@/core/network/types";
-import { CompiledCell } from "./types";
 import { useCompiledCellsActions, useUpdateDataflowGraph } from "./state";
+import { CompiledCell } from "@/protos/compile";
 
 export function useCompilationHandlers(): {
   handlers: CompilationHandlers<CompiledCell>;

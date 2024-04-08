@@ -10,9 +10,9 @@ import { Logger } from "@/utils/Logger";
 import { RuntimeMode, getRuntimeMode } from "@/utils/runtimeMode";
 import { SendRunOptions } from "@/core/network/types";
 import { useCompilationHandlers } from "@/core/workers/runtime/compilation";
-import { CompiledCell } from "@/core/workers/runtime/types";
 import { useConnectedWorkers } from "@/core/workers/state";
 import { useCurrentScope } from "@/core/workers/runtime/state";
+import { CompiledCell } from "@/protos/compile";
 
 /**
  * Creates a function that runs all cells that have been edited or interrupted.

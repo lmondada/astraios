@@ -12,7 +12,7 @@ from protos.compile_pb2 import (
     CompileRequest,
     CompileResponse,
     CompileStatus,
-    CompiledFunction,
+    CompiledCell,
 )
 
 
@@ -30,12 +30,12 @@ class CompilationServicer(compile_pb2_grpc.CompilationServicer):
         worker_id = UUID(request.worker_id)
         scope = request.scope
         result = compile_cell(cell_content, worker_id, cell_id, scope)
-        yield CompileResponse(result=CompileResult(func_ids={cell_id: result}))
+        yield CompileResponse(result=CompileResult(cells={cell_id: result}))
 
 
 def compile_cell(
     code: str, worker_id: UUID, cell_id: str, scope: dict[str, Type]
-) -> CompiledFunction:
+) -> CompiledCell:
     """
     The actual compilation action.
     """
@@ -43,12 +43,14 @@ def compile_cell(
     fn_name = random_function_name()
     worker = Worker.get_worker(worker_id)
     assert worker
-    code = as_tierkreis_function_str(code, sig, fn_name)
+    cell_output_name = f"{cell_id}_out"
+    code = as_tierkreis_function_str(code, sig, fn_name, cell_output_name)
     worker.add_fn(code)
-    return CompiledFunction(
+    return CompiledCell(
         func_id=fn_name,
         cell_id=cell_id,
         inputs=sig.inputs,
         outputs=sig.outputs,
         variables={var.name: var for var in sig.variables},
+        cell_output=cell_output_name,
     )

@@ -1,7 +1,5 @@
 import { createNetworkRequests } from "./requests-network";
 import { EditRequests, RunRequests } from "./types";
-import { CellId } from "../cells/ids";
-import { VariableName } from "../variables/types";
 import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
 import { CompilationClient } from "@/protos/compile.client";
 import { CompileResponse } from "@/protos/compile";
@@ -40,15 +38,9 @@ export function createWorkersRequests(): EditRequests & RunRequests {
       // TODO: use proto types throughout!
       switch (response.oneofKind) {
         case "result":
-          const compiledFuncs = response.result;
-          for (const cell of Object.values(compiledFuncs.funcIds)) {
-            handleResult({
-              cellId: cell.cellId as CellId,
-              funcId: cell.funcId,
-              inputs: cell.inputs as VariableName[],
-              outputs: cell.outputs as VariableName[],
-              variables: Object.values(cell.variables),
-            });
+          const compiledCells = response.result;
+          for (const cell of Object.values(compiledCells.cells)) {
+            handleResult(cell);
           }
           break;
         case "status":

@@ -13,7 +13,9 @@ def {fn_name}({inputs}) -> tuple[{outputs}]:
 """
 
 
-def as_tierkreis_function_str(code: str, sig: Signature, fn_name: str) -> str:
+def as_tierkreis_function_str(
+    code: str, sig: Signature, fn_name: str, cell_output_name: str
+) -> str:
     """
     Convert a code string and a signature into a function string.
 
@@ -24,6 +26,8 @@ def as_tierkreis_function_str(code: str, sig: Signature, fn_name: str) -> str:
     outputs = ",".join(
         format_name_type_pair(sig.outputs, sig.variables, type_only=True)
     )
+    code = prepend_cell_output(code, cell_output_name)
+    code += f"\nreturn ({cell_output_name}, {','.join(sig.outputs)})"
     code = textwrap.indent(code, "    ")
     return FN_TEMPLATE.format(
         fn_name=fn_name, inputs=inputs, outputs=outputs, code=code
@@ -44,3 +48,11 @@ def random_function_name() -> str:
     if not uuid_str[0].isalpha():
         uuid_str = "f" + uuid_str
     return uuid_str
+
+
+def prepend_cell_output(code: str, cell_output_name: str) -> str:
+    """Add cell_output = xyz to the last expression of the code"""
+    code_lines = code.strip().split("\n")
+    code_lines[-1] = f"{cell_output_name} = " + code_lines[-1]
+    code = "\n".join(code_lines)
+    return code

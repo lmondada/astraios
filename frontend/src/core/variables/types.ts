@@ -17,7 +17,7 @@ export interface Variable {
   /**
    * Type of the value.
    */
-  dataType?: Type;
+  dataType: Type;
 }
 
 export type Variables = Record<VariableName, Variable>;

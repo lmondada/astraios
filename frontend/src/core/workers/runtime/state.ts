@@ -1,14 +1,18 @@
 import { atom, useAtomValue, useSetAtom } from "jotai";
-import Graph from "graphology";
-import { CompiledCell } from "./types";
-import { Variables } from "@/core/variables/types";
+import DirectedGraph from "graphology";
+import { VariableName, Variables } from "@/core/variables/types";
 import { useVariablesActions } from "@/core/variables/state";
 import { useEffect, useMemo } from "react";
 import { CellId } from "@/core/cells/ids";
 import { createReducer } from "@/utils/createReducer";
+import { CompiledCell } from "@/protos/compile";
 import { Type } from "@/protos/tierkreis/graph";
+import { useTierkreisCodeExecution } from "./execution";
 
-const dataflowGraph = atom<Graph>(new Graph());
+export type NodeAttrs = CompiledCell;
+export type EdgeAttrs = { varName: VariableName; dataType: Type };
+export type DFGraph = DirectedGraph<NodeAttrs, EdgeAttrs>;
+const dataflowGraph = atom<DFGraph>(new DirectedGraph<NodeAttrs, EdgeAttrs>());
 const compiledCells = atom<Record<CellId, CompiledCell>>({});
 
 function initialState(): Record<CellId, CompiledCell> {
@@ -31,6 +35,10 @@ export function useCompiledCells() {
   return useAtomValue(compiledCells);
 }
 
+export function useDataflowGraph() {
+  return useAtomValue(dataflowGraph);
+}
+
 /**
  * React hook to get the current scope of all but the given cell.
  *
@@ -44,7 +52,7 @@ export function useCurrentScope(cellId?: CellId): Record<string, Type> {
     for (const cell of Object.values(cells)) {
       if (cell.cellId !== cellId) {
         for (const varName of cell.outputs) {
-          const varType = cell.variables.find((v) => v.name === varName)?.type;
+          const varType = cell.variables[varName]?.type;
           if (!varType) {
             throw new Error(
               `Output ${varName} of cell ${cellId} is not defined`,
@@ -75,44 +83,48 @@ export function useCompiledCellsActions() {
  * React hook to update the dataflow graph whenever the compiled cells change.
  */
 export function useUpdateDataflowGraph() {
+  useTierkreisCodeExecution();
   const setDataflowState = useSetAtom(dataflowGraph);
   const { setVariables } = useVariablesActions();
   const compiledCells = useCompiledCells();
   useEffect(() => {
-    let g = new Graph();
+    let g = new DirectedGraph<NodeAttrs, EdgeAttrs>();
     let variables: Variables = {};
     for (const cell of Object.values(compiledCells)) {
       const cellId = cell.cellId;
       g.addNode(cellId, cell);
       // Mark input variables as used in cellId
-      for (const varInput of cell.inputs) {
-        const dataType = cell.variables.find((v) => v.name === varInput)?.type;
+      for (const varInput of cell.inputs as VariableName[]) {
+        const dataType = cell.variables[varInput]?.type;
         variables[varInput] = variables[varInput] || {
           name: varInput,
           declaredBy: [],
           usedBy: [],
           dataType,
         };
-        variables[varInput].usedBy.push(cellId);
+        variables[varInput].usedBy.push(cellId as CellId);
       }
       // Mark output variables as declared in cellId
-      for (const varOutput of cell.outputs) {
-        const dataType = cell.variables.find((v) => v.name === varOutput)?.type;
+      for (const varOutput of cell.outputs as VariableName[]) {
+        const dataType = cell.variables[varOutput]?.type;
         variables[varOutput] = variables[varOutput] || {
           name: varOutput,
           declaredBy: [],
           usedBy: [],
           dataType,
         };
-        variables[varOutput].declaredBy.push(cellId);
+        variables[varOutput].declaredBy.push(cellId as CellId);
       }
     }
     for (const cell of Object.values(compiledCells)) {
       const usedByCell = cell.cellId;
-      for (const varInput of cell.inputs) {
+      for (const varInput of cell.inputs as VariableName[]) {
         const variable = variables[varInput];
         for (const declaredByCell of variable.declaredBy) {
-          g.addEdge(declaredByCell, usedByCell);
+          g.addEdge(declaredByCell, usedByCell, {
+            varName: varInput,
+            dataType: variable.dataType,
+          });
         }
       }
     }
