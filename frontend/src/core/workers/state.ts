@@ -2,9 +2,9 @@ import { atom, useAtomValue, useSetAtom } from "jotai";
 import { Worker, Workers, WorkersState } from "./types";
 import { createReducer } from "@/utils/createReducer";
 import { useEffect, useMemo } from "react";
-import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
-import { WorkerCreationClient } from "@/protos/worker.client";
-import { CreateWorkerResponse } from "@/protos/worker";
+import { createPromiseClient } from "@connectrpc/connect";
+import { createGrpcWebTransport } from "@connectrpc/connect-web";
+import { WorkerCreation } from "@/protos/worker_connect";
 
 function initialState(): WorkersState {
   return {
@@ -131,13 +131,12 @@ export function useCreateWorkerConnection() {
 
   useEffect(() => {
     const fetchAndUpdateWorkerConnection = async (url: string) => {
-      const transport = new GrpcWebFetchTransport({
+      const transport = createGrpcWebTransport({
         baseUrl: url,
       });
-      const workerCreation = new WorkerCreationClient(transport);
+      const workerCreation = createPromiseClient(WorkerCreation, transport);
       try {
-        let { response }: { response: CreateWorkerResponse } =
-          await workerCreation.createWorker({});
+        let response = await workerCreation.createWorker({});
         setWorkerConnected({ url, ...response });
         setDefaultWorkerIfNull(response.workerId);
       } catch (err) {

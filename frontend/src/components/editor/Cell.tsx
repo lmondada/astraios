@@ -48,7 +48,7 @@ import { RuntimeMode, getRuntimeMode } from "@/utils/runtimeMode";
 import { SendRunOptions } from "@/core/network/types";
 import { useCompilationHandlers } from "@/core/workers/runtime/compilation";
 import { useCurrentScope } from "@/core/workers/runtime/state";
-import { CompiledCell } from "@/protos/compile";
+import { CompiledCell } from "@/protos/compile_pb";
 
 /**
  * Imperative interface of the cell.

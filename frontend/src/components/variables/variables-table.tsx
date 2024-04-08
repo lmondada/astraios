@@ -28,7 +28,7 @@ import { DataTableColumnHeader } from "../data-table/column-header";
 import { sortBy } from "lodash-es";
 import { getCellEditorView } from "@/core/cells/cells";
 import { goToDefinition } from "@/core/codemirror/find-replace/search-highlight";
-import { Type } from "@/protos/tierkreis/graph";
+import { Type } from "@/protos/tierkreis/graph_pb";
 
 interface Props {
   className?: string;
@@ -283,5 +283,5 @@ export const VariableTable: React.FC<Props> = memo(
 VariableTable.displayName = "VariableTable";
 
 function display_type(type: Type): string {
-  return "tk." + type.type.oneofKind;
+  return "tk." + type.type.case;
 }

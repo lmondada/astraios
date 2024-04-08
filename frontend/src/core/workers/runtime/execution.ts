@@ -3,15 +3,16 @@ import {
   FunctionName,
   FunctionNode,
   Graph,
-} from "@/protos/tierkreis/graph";
+  Node,
+} from "@/protos/tierkreis/graph_pb";
 import { useDataflowGraph, DFGraph, useCompiledCells } from "./state";
 import { useEffect } from "react";
-import { GrpcWebFetchTransport } from "@protobuf-ts/grpcweb-transport";
-import { RuntimeClient } from "@/protos/tierkreis/runtime.client";
 import { useCellActions } from "@/core/cells/cells";
 import { CellId } from "@/core/cells/ids";
 import { useRuntimeUrl } from "../tierkreis_runtime";
-import { RpcInterceptor } from "@protobuf-ts/runtime-rpc";
+import { createGrpcWebTransport } from "@connectrpc/connect-web";
+import { createPromiseClient } from "@connectrpc/connect";
+import { Runtime } from "@/protos/tierkreis/runtime_connect";
 
 /**
  * React hook to watch cell updates and execute on Tierkreis
@@ -26,10 +27,10 @@ export function useTierkreisCodeExecution() {
   // unaryInterceptors: unaryInterceptors,
   // streamInterceptors: streamInterceptors,
   // });
-  const transport = new GrpcWebFetchTransport({
+  const transport = createGrpcWebTransport({
     baseUrl: runtimeUrl,
   });
-  const tierkreis = new RuntimeClient(transport);
+  const tierkreis = createPromiseClient(Runtime, transport);
 
   useEffect(() => {
     const tk_graph = as_tierkreis_graph(graph);
@@ -39,24 +40,24 @@ export function useTierkreisCodeExecution() {
     };
     async function run() {
       try {
-        const runResults = await tierkreis.runGraph(request).response;
-        switch (runResults.result.oneofKind) {
+        const runResults = await tierkreis.runGraph(request);
+        switch (runResults.result.case) {
           case "error":
-            throw new Error(runResults.result.error);
+            throw new Error(runResults.result.value);
           case "typeErrors":
-            console.log(runResults.result.typeErrors.errors);
+            console.log(runResults.result.value);
             break;
           case "success":
-            const outputs = runResults.result.success;
+            const outputs = runResults.result.value;
             for (const cell of Object.values(cells)) {
               const output = outputs.map[cell.cellOutput];
               if (output) {
-                if (output.value.oneofKind !== "str") {
+                if (output.value.case !== "str") {
                   throw new Error("Cell Output is not a string");
                 }
                 setStdinResponse({
                   cellId: cell.cellId as CellId,
-                  response: output.value.str,
+                  response: output.value.value,
                   outputIndex: 0,
                 });
               }
@@ -76,14 +77,14 @@ function as_tierkreis_graph(graph: DFGraph): Graph {
   const fn_nodes: FunctionNode[] = graph.nodes().map((cellId, index) => {
     const funcId = graph.getNodeAttribute(cellId, "funcId");
 
-    const name: FunctionName = {
+    const name = new FunctionName({
       namespaces: [],
       name: funcId,
-    };
+    });
 
     cellIdtoIndex.set(cellId, index);
 
-    return { name };
+    return new FunctionNode({ name });
   });
   const edges: Edge[] = graph.mapEdges((edge) => {
     const { varName, dataType } = graph.getEdgeAttributes(edge);
@@ -94,30 +95,29 @@ function as_tierkreis_graph(graph: DFGraph): Graph {
     if (!nodeFrom || !nodeTo) {
       throw new Error("Cell not found");
     }
-    return {
+    return new Edge({
       portFrom: varName,
       portTo: varName,
       nodeFrom,
       nodeTo,
       edgeType: dataType,
-    };
+    });
   });
 
   const toNode = (node: FunctionNode) => {
-    const fn_wrap: { oneofKind: "function" } = { oneofKind: "function" };
-    return {
+    return new Node({
       node: {
-        function: node,
-        ...fn_wrap,
+        case: "function",
+        value: node,
       },
-    };
+    });
   };
 
-  return {
+  return new Graph({
     nodes: fn_nodes.map(toNode),
     edges,
     name: "notebook",
     inputOrder: [],
     outputOrder: [],
-  };
+  });
 }

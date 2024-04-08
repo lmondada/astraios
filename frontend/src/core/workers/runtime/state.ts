@@ -5,8 +5,8 @@ import { useVariablesActions } from "@/core/variables/state";
 import { useEffect, useMemo } from "react";
 import { CellId } from "@/core/cells/ids";
 import { createReducer } from "@/utils/createReducer";
-import { CompiledCell } from "@/protos/compile";
-import { Type } from "@/protos/tierkreis/graph";
+import { CompiledCell } from "@/protos/compile_pb";
+import { Type } from "@/protos/tierkreis/graph_pb";
 import { useTierkreisCodeExecution } from "./execution";
 
 export type NodeAttrs = CompiledCell;

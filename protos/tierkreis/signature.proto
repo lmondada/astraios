@@ -1,6 +1,6 @@
 syntax = "proto3";
 package tierkreis.v1alpha1.signature;
-import "protos/tierkreis/graph.proto";
+import "tierkreis/graph.proto";
 
 message FunctionDeclaration {
   tierkreis.v1alpha1.graph.TypeScheme type_scheme = 2;

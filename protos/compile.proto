@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package astraios.compile;
 
-import "protos/tierkreis/graph.proto";
+import "tierkreis/graph.proto";
 
 message CompileRequest {
   // Map from CellIds to code

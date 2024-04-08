@@ -1,6 +1,6 @@
 syntax = "proto3";
-import "protos/tierkreis/graph.proto";
-import "protos/tierkreis/signature.proto";
+import "tierkreis/graph.proto";
+import "tierkreis/signature.proto";
 package tierkreis.v1alpha1.runtime;
 
 service Runtime {
