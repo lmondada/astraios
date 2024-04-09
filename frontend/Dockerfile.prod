@@ -1,5 +1,20 @@
+FROM node:21 AS builder
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Install project
+COPY . /app
+RUN rm -rf node_modules
+
+RUN pnpm install
+
+
 FROM nginx:latest
 
-COPY ./dist /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 CMD ["/bin/sh", "-c", "nginx -g 'daemon off;'"]

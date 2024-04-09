@@ -21,7 +21,8 @@ import { isPyodide } from "./pyodide/utils";
 import { PyodideBridge } from "./pyodide/bridge";
 import { LargeSpinner } from "@/components/icons/large-spinner";
 import { TailwindIndicator } from "@/components/indicator";
-import { WorkerSelector } from "@/components/editor/controls/worker-selector";
+import { RunEnvironments } from "@/components/editor/controls/run-environments/run-environments";
+import { WorkerSelector } from "@/components/editor/controls/run-environments/worker-selector";
 
 /**
  * The root component of the Marimo app.
@@ -46,7 +47,7 @@ export const MarimoApp: React.FC = memo(() => {
         <App userConfig={userConfig} appConfig={appConfig} />
         <Toaster />
         <CommandPalette />
-        <WorkerSelector />
+        <RunEnvironments />
       </AppChrome>
     );
 

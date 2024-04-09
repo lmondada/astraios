@@ -211,8 +211,8 @@ const DEFAULT_HOT_KEY = {
     group: "Other",
     key: "Mod-k",
   },
-  "global.workerSelector": {
-    name: "Worker selector",
+  "global.runEnvironments": {
+    name: "Run environments",
     group: "Other",
     key: "Mod-e",
   },
