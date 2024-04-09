@@ -3,7 +3,7 @@ import { Worker, Workers, WorkersState } from "./types";
 import { createReducer } from "@/utils/createReducer";
 import { useEffect, useMemo } from "react";
 import { createPromiseClient } from "@connectrpc/connect";
-import { createGrpcWebTransport } from "@connectrpc/connect-web";
+import { createConnectTransport } from "@connectrpc/connect-web";
 import { WorkerCreation } from "@/protos/worker_connect";
 
 function initialState(): WorkersState {
@@ -131,8 +131,9 @@ export function useCreateWorkerConnection() {
 
   useEffect(() => {
     const fetchAndUpdateWorkerConnection = async (url: string) => {
-      const transport = createGrpcWebTransport({
+      const transport = createConnectTransport({
         baseUrl: url,
+        useBinaryFormat: true,
       });
       const workerCreation = createPromiseClient(WorkerCreation, transport);
       try {

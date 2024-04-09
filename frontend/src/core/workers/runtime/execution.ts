@@ -10,7 +10,7 @@ import { useEffect } from "react";
 import { useCellActions } from "@/core/cells/cells";
 import { CellId } from "@/core/cells/ids";
 import { useRuntimeUrl } from "../tierkreis_runtime";
-import { createGrpcWebTransport } from "@connectrpc/connect-web";
+import { createConnectTransport } from "@connectrpc/connect-web";
 import { createPromiseClient } from "@connectrpc/connect";
 import { Runtime } from "@/protos/tierkreis/runtime_connect";
 
@@ -27,8 +27,9 @@ export function useTierkreisCodeExecution() {
   // unaryInterceptors: unaryInterceptors,
   // streamInterceptors: streamInterceptors,
   // });
-  const transport = createGrpcWebTransport({
+  const transport = createConnectTransport({
     baseUrl: runtimeUrl,
+    useBinaryFormat: true,
   });
   const tierkreis = createPromiseClient(Runtime, transport);
 

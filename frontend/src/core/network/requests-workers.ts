@@ -1,7 +1,7 @@
 import { createNetworkRequests } from "./requests-network";
 import { EditRequests, RunRequests } from "./types";
 import { createPromiseClient } from "@connectrpc/connect";
-import { createGrpcWebTransport } from "@connectrpc/connect-web";
+import { createConnectTransport } from "@connectrpc/connect-web";
 import { Compilation } from "@/protos/compile_connect";
 
 export function createWorkersRequests(): EditRequests & RunRequests {
@@ -15,8 +15,9 @@ export function createWorkersRequests(): EditRequests & RunRequests {
     }
     const { handleResult, handleMessage } = options.handlers;
 
-    const transport = createGrpcWebTransport({
+    const transport = createConnectTransport({
       baseUrl: options.baseUrl,
+      useBinaryFormat: true,
     });
     const compilation = createPromiseClient(Compilation, transport);
 
