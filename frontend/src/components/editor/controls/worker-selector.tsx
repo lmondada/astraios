@@ -2,7 +2,7 @@ import { HOTKEYS } from "@/core/hotkeys/hotkeys";
 import { parseShortcut } from "@/core/hotkeys/shortcuts";
 import { atom, useAtom } from "jotai";
 import React, { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 import * as Dg from "@radix-ui/react-dialog";
 import {
@@ -10,7 +10,7 @@ import {
   useWorkers,
   useWorkersActions,
 } from "@/core/workers/state";
-import { Worker } from "@/core/workers/types";
+import { RecentWorker, Worker } from "@/core/workers/types";
 import { useRecentWorkers } from "@/hooks/useRecentWorkers";
 
 export const workerSelectorAtom = atom(false);
@@ -24,17 +24,12 @@ export const WorkerSelector: React.FC = () => {
   // Hook to connect workers to remote and update metadata
   useCreateWorkerConnection();
 
-  const { recentWorkers, addRecentWorker } = useRecentWorkers();
+  const { recentWorkers, deleteRecentWorker } = useRecentWorkers();
 
   const workers = useWorkers();
-  const { createFromUrl } = useWorkersActions();
-
-  for (const worker of recentWorkers) {
-    createFromUrl(worker);
-  }
+  const { createFromUrl, deleteWorker } = useWorkersActions();
 
   const createWorker = (url: string) => {
-    addRecentWorker(url);
     createFromUrl(url);
   };
 
@@ -50,12 +45,24 @@ export const WorkerSelector: React.FC = () => {
     return () => document.removeEventListener("keydown", down);
   }, [setOpen]);
 
-  return intoHTML(workers, createWorker, open, setOpen, inputState);
+  return intoHTML(
+    workers,
+    recentWorkers,
+    createWorker,
+    deleteWorker,
+    deleteRecentWorker,
+    open,
+    setOpen,
+    inputState,
+  );
 };
 
 function intoHTML(
   workers: Worker[],
+  recentWorkers: RecentWorker[],
   createWorker: (url: string) => void,
+  deleteWorker: (url: string) => void,
+  deleteRecentWorker: (url: string) => void,
   open: boolean,
   setOpen: (open: boolean) => void,
   [newWorkerInputField, setNewWorkerInputField]: [
@@ -110,24 +117,38 @@ function intoHTML(
             <ul className="menu-item relative cursor-default select-none items-center rounded-sm px-1 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground aria-selected:bg-accent aria-selected:text-accent-foreground">
               {/* Example static list item */}
               {Object.values(workers).map((worker) => {
-                return <WorkerListItem key={worker.url} worker={worker} />;
-              })}
-            </ul>
-            {/* <Dg.DialogDescription className="overflow-hidden p-1 text-foreground px-1 py-1.5 text-xs font-medium text-muted-foreground">
-              Recently Used Workers
-            </Dg.DialogDescription> */}
-            {/* This section should dynamically list recently used workers */}
-            {/* <ul className="menu-item relative cursor-default select-none items-center rounded-sm px-1 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground aria-selected:bg-accent aria-selected:text-accent-foreground">
-              {/* Example static list item */}
-            {/* {recentWorkers.map((worker) => {
                 return (
                   <WorkerListItem
-                    key={worker}
-                    worker={{ url: worker, connectionStatus: "connecting" }}
+                    key={worker.url}
+                    worker={worker}
+                    handleDelete={() => {
+                      deleteWorker(worker.url);
+                    }}
                   />
                 );
-              })} */}
-            {/* </ul> */}
+              })}
+            </ul>
+            <Dg.DialogDescription className="overflow-hidden p-1 text-foreground px-1 py-1.5 text-xs font-medium text-muted-foreground">
+              Recently Used Workers
+            </Dg.DialogDescription>
+            {/* This section should dynamically list recently used workers */}
+            <ul className="menu-item relative cursor-default select-none items-center rounded-sm px-1 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground aria-selected:bg-accent aria-selected:text-accent-foreground">
+              {/* Example static list item */}
+              {recentWorkers.map((worker) => {
+                return (
+                  <WorkerListItem
+                    key={worker.url}
+                    worker={worker}
+                    handleDelete={() => {
+                      deleteRecentWorker(worker.url);
+                    }}
+                    handleClick={() => {
+                      createWorker(worker.url);
+                    }}
+                  />
+                );
+              })}
+            </ul>
             <Dg.Description />
             <Dg.Close />
           </Dg.Content>
@@ -139,10 +160,14 @@ function intoHTML(
 
 type WorkerListItemProp = {
   worker: Worker;
+  handleDelete: () => void;
+  handleClick?: () => void;
 };
 
 const WorkerListItem: React.FC<WorkerListItemProp> = ({
   worker,
+  handleDelete,
+  handleClick,
 }: WorkerListItemProp) => {
   let name: string;
   switch (worker.connectionStatus) {
@@ -155,6 +180,9 @@ const WorkerListItem: React.FC<WorkerListItemProp> = ({
     case "failed":
       name = "Connection failed";
       break;
+    case "recent":
+      name = worker.name;
+      break;
   }
   const pillColor = {
     connected: "bg-green-500",
@@ -164,15 +192,27 @@ const WorkerListItem: React.FC<WorkerListItemProp> = ({
   return (
     <li
       key={worker.url}
-      className="flex justify-between items-center p-2 rounded-sm text-sm outline-none hover:bg-accent hover:text-accent-foreground aria-selected:bg-accent aria-selected:text-accent-foreground"
+      className="flex justify-between items-center p-2 rounded-sm text-sm outline-none hover:bg-accent hover:text-accent-foreground aria-selected:bg-accent aria-selected:text-accent-foreground group"
+      onClick={handleClick}
     >
       <div>
-        <div>{name ?? "Connecting..."}</div>
+        {name && <div>{name}</div>}
         <div className="italic">{worker.url}</div>
       </div>
-      <div
-        className={`h-2.5 w-2.5 rounded-full self-center ${pillColor[worker.connectionStatus]}`}
-      ></div>
+      {worker.connectionStatus !== "recent" && (
+        <div
+          className={`h-2.5 w-2.5 rounded-full self-center ${pillColor[worker.connectionStatus]} group-hover:hidden`}
+        ></div>
+      )}
+      <Trash2
+        className="hidden group-hover:block hover:text-destructive"
+        size={15}
+        strokeWidth={1.5}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDelete();
+        }}
+      />
     </li>
   );
 };

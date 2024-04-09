@@ -5,6 +5,7 @@ import { useEffect, useMemo } from "react";
 import { createPromiseClient } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { WorkerCreation } from "@/protos/worker_connect";
+import { useRecentWorkers } from "@/hooks/useRecentWorkers";
 
 function initialState(): WorkersState {
   return {
@@ -106,6 +107,19 @@ const { reducer, createActions } = createReducer(initialState, {
     }
     return state;
   },
+  deleteWorker: (state, url: string) => {
+    let workers = { ...state.workers };
+    if (workers.connected[url]) {
+      delete workers.connected[url];
+    }
+    if (workers.connecting[url]) {
+      delete workers.connecting[url];
+    }
+    if (workers.failed[url]) {
+      delete workers.failed[url];
+    }
+    return { ...state, workers };
+  },
 });
 
 /**
@@ -129,6 +143,8 @@ export function useCreateWorkerConnection() {
   const { setWorkerConnected, setWorkerFailed, setDefaultWorkerIfNull } =
     useWorkersActions();
 
+  const { addRecentWorker } = useRecentWorkers();
+
   useEffect(() => {
     const fetchAndUpdateWorkerConnection = async (url: string) => {
       const transport = createConnectTransport({
@@ -140,6 +156,11 @@ export function useCreateWorkerConnection() {
         let response = await workerCreation.createWorker({});
         setWorkerConnected({ url, ...response });
         setDefaultWorkerIfNull(response.workerId);
+        addRecentWorker({
+          url,
+          name: response.name,
+          connectionStatus: "recent",
+        });
       } catch (err) {
         console.error("Failed to fetch worker metadata:", err);
         setWorkerFailed({ url });

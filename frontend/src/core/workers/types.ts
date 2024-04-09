@@ -9,7 +9,11 @@ export interface WorkersState {
   defaultWorker: string | null;
 }
 
-export type Worker = ConnectedWorker | ConnectingWorker | FailedWorker;
+export type Worker =
+  | ConnectedWorker
+  | ConnectingWorker
+  | FailedWorker
+  | RecentWorker;
 
 export interface ConnectedWorker {
   name: string;
@@ -25,5 +29,11 @@ export interface ConnectingWorker {
 
 export interface FailedWorker {
   connectionStatus: "failed";
+  url: string;
+}
+
+export interface RecentWorker {
+  connectionStatus: "recent";
+  name: string;
   url: string;
 }
