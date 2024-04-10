@@ -12,10 +12,9 @@ services:
     ports:
       - "3000:3000"
   py-kernel:
-    # Live access to the code
-    # TODO: this isnt working for some reason?
-    # volumes:
-    #   - ./kernel/python:/app
     # This is proxied by envoy, so we don't need to expose in production
     ports:
       - "9090:9090"
+    # Live access to the code
+    volumes:
+      - ./kernels/python:/app

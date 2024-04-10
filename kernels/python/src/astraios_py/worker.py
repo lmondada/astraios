@@ -2,6 +2,7 @@
 Python code execution using Tierkreis workers
 """
 
+from dataclasses import make_dataclass
 from typing import Union
 from uuid import uuid4, UUID
 
@@ -10,10 +11,15 @@ from .protos.astraios.worker import (
     CreateWorkerRequest,
     CreateWorkerResponse,
 )
+from .codegen import (
+    as_function_def,
+)
+from .signature import VarTypePair
 
 from tierkreis.worker.namespace import Namespace as WorkerNS
 from tierkreis.pyruntime import PyRuntime
 from tierkreis.builder import Namespace
+from tierkreis.core.python import UnpackRow
 
 
 class WorkerCreationService(WorkerCreationBase):
@@ -37,15 +43,32 @@ class Worker:
         self.worker_id = worker_id
         self.worker = WorkerNS()
 
-    def add_fn(self, code: str):
+    def add_fn(
+        self,
+        fn_name: str,
+        body: str,
+        inputs: list[VarTypePair],
+        outputs: list[VarTypePair],
+    ):
         """
         Add a function to the worker
         """
+        # Pack multiple return values into a dataclass
+        ReturnType = make_dataclass(
+            f"ReturnType_{fn_name}",
+            [(o.name, o.data_type) for o in outputs],
+            bases=(UnpackRow,),
+        )
+        # Wrap code in function def
+        code = as_function_def(body, inputs, ReturnType, fn_name)
+        print(code)
 
-        # pylint: disable=unused-variable
-        pycells = self.worker[self.NAMESPACE]
         # pylint: disable=exec-used
-        exec(f"@{self.NAMESPACE}.function()\nasync {code}")
+        globals = {
+            self.NAMESPACE: self.worker[self.NAMESPACE],
+            ReturnType.__name__: ReturnType,
+        }
+        exec(f"@{self.NAMESPACE}.function()\nasync {code}", globals)
 
     # TODO: support arbitrary arguments
     async def run_testing_only(self, fn_name: str, *args):
@@ -62,10 +85,11 @@ class Worker:
 
         @graph()
         def f_graph() -> Output:
-            print(fn_name)
             f = getattr(ns, fn_name)
-            print(f)
-            return Output(f(Const(args[0]), Const(args[1])))
+            outs = f(*[Const(arg) for arg in args])
+            return Output(**{k: outs[k] for k in outs.outports})
+
+        print(f_graph.to_proto())
 
         return await cl.run_graph(f_graph)
 

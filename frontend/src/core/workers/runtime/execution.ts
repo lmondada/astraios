@@ -4,15 +4,18 @@ import {
   FunctionNode,
   Graph,
   Node,
+  Type,
 } from "@/protos/tierkreis/graph_pb";
 import { useDataflowGraph, DFGraph, useCompiledCells } from "./state";
 import { useEffect } from "react";
 import { useCellActions } from "@/core/cells/cells";
 import { CellId } from "@/core/cells/ids";
-import { useRuntimeUrl } from "../tierkreis_runtime";
+import { useRuntime } from "../tierkreis-runtime";
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { createPromiseClient } from "@connectrpc/connect";
-import { Runtime } from "@/protos/tierkreis/runtime_connect";
+import { TempRuntime as Runtime } from "@/protos/runtime_connect";
+import { CellMessage } from "@/core/kernel/messages";
+import { Time } from "@/utils/time";
 
 /**
  * React hook to watch cell updates and execute on Tierkreis
@@ -20,15 +23,15 @@ import { Runtime } from "@/protos/tierkreis/runtime_connect";
 export function useTierkreisCodeExecution() {
   const graph = useDataflowGraph();
   const cells = useCompiledCells();
-  const runtimeUrl = useRuntimeUrl();
-  const { setStdinResponse } = useCellActions();
+  const runtime = useRuntime();
+  const { handleCellMessage } = useCellActions();
 
   // const client = new EchoServicePromiseClient(host, creds, {
   // unaryInterceptors: unaryInterceptors,
   // streamInterceptors: streamInterceptors,
   // });
   const transport = createConnectTransport({
-    baseUrl: runtimeUrl,
+    baseUrl: runtime.url,
     useBinaryFormat: true,
   });
   const tierkreis = createPromiseClient(Runtime, transport);
@@ -37,7 +40,8 @@ export function useTierkreisCodeExecution() {
     const tk_graph = as_tierkreis_graph(graph);
     const request = {
       graph: tk_graph,
-      typeCheck: true,
+      runtimeId: runtime.runtimeId,
+      // typeCheck: true,
     };
     async function run() {
       try {
@@ -50,16 +54,28 @@ export function useTierkreisCodeExecution() {
             break;
           case "success":
             const outputs = runResults.result.value;
+            console.log("success => ", outputs);
             for (const cell of Object.values(cells)) {
               const output = outputs.map[cell.cellOutput];
               if (output) {
                 if (output.value.case !== "str") {
                   throw new Error("Cell Output is not a string");
                 }
-                setStdinResponse({
+                const message: CellMessage = {
+                  cell_id: cell.cellId as CellId,
+                  output: {
+                    channel: "output",
+                    mimetype: "text/plain",
+                    data: output.value.value,
+                    timestamp: 0,
+                  },
+                  console: null,
+                  status: null,
+                  timestamp: Time.now().toSeconds(),
+                };
+                handleCellMessage({
                   cellId: cell.cellId as CellId,
-                  response: output.value.value,
-                  outputIndex: 0,
+                  message,
                 });
               }
             }
@@ -75,19 +91,33 @@ export function useTierkreisCodeExecution() {
 
 function as_tierkreis_graph(graph: DFGraph): Graph {
   let cellIdtoIndex = new Map<string, number>();
-  const fn_nodes: FunctionNode[] = graph.nodes().map((cellId, index) => {
+
+  const toFnNode = (name: FunctionName) => {
+    return new Node({
+      node: {
+        case: "function",
+        value: new FunctionNode({ name }),
+      },
+    });
+  };
+
+  const inNode = new Node({ node: { case: "input", value: {} } });
+  const outNode = new Node({ node: { case: "output", value: {} } });
+  const ioNodes = [inNode, outNode];
+  const outNodeIndex = 1;
+  const fnNodes: Node[] = graph.nodes().map((cellId, index) => {
     const funcId = graph.getNodeAttribute(cellId, "funcId");
 
     const name = new FunctionName({
-      namespaces: [],
+      namespaces: ["pycells"],
       name: funcId,
     });
 
-    cellIdtoIndex.set(cellId, index);
+    cellIdtoIndex.set(cellId, index + 2);
 
-    return new FunctionNode({ name });
+    return toFnNode(name);
   });
-  const edges: Edge[] = graph.mapEdges((edge) => {
+  const internalEdges: Edge[] = graph.mapEdges((edge) => {
     const { varName, dataType } = graph.getEdgeAttributes(edge);
     const fromCellId = graph.getSourceAttribute(edge, "cellId");
     const toCellId = graph.getTargetAttribute(edge, "cellId");
@@ -104,19 +134,24 @@ function as_tierkreis_graph(graph: DFGraph): Graph {
       edgeType: dataType,
     });
   });
-
-  const toNode = (node: FunctionNode) => {
-    return new Node({
-      node: {
-        case: "function",
-        value: node,
-      },
-    });
-  };
+  let outputEdges = graph.mapNodes((cellId) => {
+    const outVar = graph.getNodeAttribute(cellId, "cellOutput");
+    return outVar
+      ? new Edge({
+          portFrom: outVar,
+          portTo: outVar,
+          nodeFrom: cellIdtoIndex.get(cellId),
+          nodeTo: outNodeIndex,
+          edgeType: new Type({ type: { case: "str", value: {} } }),
+        })
+      : undefined;
+  });
 
   return new Graph({
-    nodes: fn_nodes.map(toNode),
-    edges,
+    nodes: ioNodes.concat(fnNodes),
+    edges: internalEdges.concat(
+      outputEdges.filter((edge) => edge !== undefined) as Edge[],
+    ),
     name: "notebook",
     inputOrder: [],
     outputOrder: [],

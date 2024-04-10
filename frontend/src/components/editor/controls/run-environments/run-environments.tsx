@@ -52,6 +52,7 @@ export const RunEnvironments: React.FC = () => {
                 return (
                   <button
                     className={`text-sm px-3 py-1 border ${isSelected ? "border-blue-500 text-blue-600 bg-blue-200" : "border-gray-300 text-gray-500 bg-white hover:bg-gray-100"} rounded-full focus:outline-none`}
+                    key={tab}
                     onClick={() => setSelectedTab(tab)}
                   >
                     {tab}

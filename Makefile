@@ -6,6 +6,7 @@ all: frontend-protos python-protos
 .PHONY: python-protos
 python-protos: kernels/python/src/astraios_py/protos/astraios/compile \
 	kernels/python/src/astraios_py/protos/astraios/worker \
+	kernels/python/src/astraios_py/protos/astraios/runtime \
 	kernels/python/src/astraios_py/protos/tierkreis/graph \
 	kernels/python/src/astraios_py/protos/tierkreis/jobs \
 	kernels/python/src/astraios_py/protos/tierkreis/runtime \

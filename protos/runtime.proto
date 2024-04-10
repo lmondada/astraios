@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+// A temporary proto file until we can use the real tierkreis one
+import "tierkreis/graph.proto";
+import "tierkreis/signature.proto";
+
+package astraios.runtime;
+
+service TempRuntime {
+  rpc RunGraph(TempRunGraphRequest) returns (TempRunGraphResponse);
+  rpc CreateRuntime(CreateRuntimeRequest) returns (CreateRuntimeResponse);
+}
+
+message CreateRuntimeRequest {
+  // Currently only support one worker
+  string worker_id = 1;
+}
+
+message CreateRuntimeResponse {
+  string runtime_id = 1;
+  string name = 2;
+}
+
+message TempRunGraphRequest {
+  tierkreis.v1alpha1.graph.Graph graph = 1;
+  string runtime_id = 2;
+}
+
+message TempRunGraphResponse {
+  oneof result {
+    tierkreis.v1alpha1.graph.StructValue success = 1;
+    string error = 2;
+    tierkreis.v1alpha1.signature.TypeErrors type_errors = 3;
+  }
+}

@@ -2,12 +2,15 @@ from typing import AsyncIterator
 from uuid import UUID
 
 from .signature import find_signature
-from .codegen import as_tierkreis_function_str, random_function_name
-from ..worker import Worker
+from .codegen import (
+    random_function_name,
+    prepend_cell_output,
+)
+from .typecast import tk_type_to_python
+from .worker import Worker
 
-from ..protos.astraios.compile import CompilationBase
-from ..protos.tierkreis.v1alpha1.graph import Type
-from ..protos.astraios.compile import (
+from .protos.astraios.compile import CompilationBase
+from .protos.astraios.compile import (
     CompileResult,
     CompileRequest,
     CompileResponse,
@@ -28,29 +31,37 @@ class CompilationService(CompilationBase):
         cell_id = next(iter(request.cell_contents.keys()))
         cell_content = request.cell_contents[cell_id]
         worker_id = UUID(request.worker_id)
-        scope = request.scope
+        scope = {n: tk_type_to_python(t) for n, t in request.scope.items()}
         result = compile_cell(cell_content, worker_id, cell_id, scope)
         yield CompileResponse(result=CompileResult(cells={cell_id: result}))
 
 
 def compile_cell(
-    code: str, worker_id: UUID, cell_id: str, scope: dict[str, Type]
+    code: str, worker_id: UUID, cell_id: str, scope: dict[str, type]
 ) -> CompiledCell:
     """
     The actual compilation action.
     """
+    # Handle the expression on last line
+    cell_output_name = f"{cell_id}_out"
+    code = prepend_cell_output(code, cell_output_name)
+
+    # Find the inputs and outputs of the cell
     sig = find_signature(code, scope)
+
+    # Create function name
     fn_name = random_function_name()
+
+    # Load code into worker
     worker = Worker.get_worker(worker_id)
     assert worker
-    cell_output_name = f"{cell_id}_out"
-    code = as_tierkreis_function_str(code, sig, fn_name, cell_output_name)
-    worker.add_fn(code)
+    worker.add_fn(fn_name, code, inputs=sig.inputs, outputs=sig.outputs)
+
     return CompiledCell(
         func_id=fn_name,
         cell_id=cell_id,
-        inputs=sig.inputs,
-        outputs=sig.outputs,
-        variables={var.name: var for var in sig.variables},
+        inputs=sig.input_names(),
+        outputs=sig.output_names(),
+        variables=sig.proto_variables(),
         cell_output=cell_output_name,
     )

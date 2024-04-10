@@ -1,12 +1,12 @@
-from .service import CompilationService
-from ..worker import Worker
-from ..protos.astraios.compile import CompilationStub
-from ..protos.astraios.compile import (
+from .compile import CompilationService
+from .worker import Worker
+from .protos.astraios.compile import CompilationStub
+from .protos.astraios.compile import (
     CompileRequest,
     CompileStatus,
     CompileResponse,
 )
-from ..protos.tierkreis.v1alpha1.graph import Type, Empty
+from .protos.tierkreis.v1alpha1.graph import Type, Empty
 
 import pytest
 from grpclib.testing import ChannelFor
@@ -18,7 +18,7 @@ compilation = CompilationService()
 async def test_compile() -> None:
     worker = Worker.create_worker()
     in_codes = ["a = 3", "a = b + 1"]
-    outputs = [["a"], ["a"]]
+    outputs = [["a", "lol_out"], ["a", "lol_out"]]
     inputs = [[], ["b"]]
     scopes: list[dict[str, Type]] = [{}, {"b": Type(int=Empty())}]
     async with ChannelFor([compilation]) as channel:
@@ -35,7 +35,5 @@ async def test_compile() -> None:
                 status=CompileStatus(status="Compiling")
             )
             result = messages[1].result.cells["lol"]
-            print("out", result.outputs)
-            print("in", result.inputs)
             assert result.outputs == output
             assert result.inputs == input

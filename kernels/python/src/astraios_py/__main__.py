@@ -2,7 +2,8 @@
 Astraios Language Plugin for Python.
 """
 
-from astraios_py.compile.service import CompilationService
+from astraios_py.compile import CompilationService
+from astraios_py.runtime import RuntimeService
 from astraios_py.worker import WorkerCreationService
 
 import asyncio
@@ -11,7 +12,7 @@ from grpclib.reflection.service import ServerReflection
 
 
 async def serve():
-    services = [CompilationService(), WorkerCreationService()]
+    services = [CompilationService(), WorkerCreationService(), RuntimeService()]
     ServerReflection.extend(services)
 
     server = Server(services)
